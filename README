@@ -1,7 +1,7 @@
 
-	TTT: Tele Traffic Tapper (version 1.4)
+	TTT: Tele Traffic Tapper (version 1.5)
 
-					99/04/12
+					2000/06/09
 
 ttt is yet another descendant of tcpdump but it is capable of real-time,
 graphical, and remote traffic-monitoring.  ttt won't replace tcpdump,
@@ -381,6 +381,17 @@ Send bug reports, suggestions, etc. to
 
 
 CHANGES:
+
+00/06/09	version-1.5
+
+		always use link level packet size to record traffic.
+
+00/04/24	support tcl-8.2/tk-8.2.
+		change the compiler optimization flag from O6 to O2.
+
+00/01/05	net_read.c: check the total length field in the ip header.
+		we found illegal values in our traffic traces which
+		causes assertion in b_addsize to fail.
 
 98/04/12	version-1.4
 

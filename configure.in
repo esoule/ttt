@@ -124,7 +124,7 @@ AC_SUBST(GCCFLAGS)
 #
 #  1. command line (--with-cflags)
 #  2. cached variable ($ttt_cv_prog_cflags)
-#  3. set to "-O6" if using gcc ($tttHaveGcc)
+#  3. set to "-O2" if using gcc ($tttHaveGcc)
 #  4. otherwise, default to "-O"
 #
 AC_MSG_CHECKING([default compiler flags])
@@ -133,7 +133,7 @@ if test  "x${ttt_ckcmd_cflags}" != "x" ; then
 elif test "x${ttt_cv_prog_cflags}" != "x" ; then
   CFLAGS=${ttt_cv_prog_cflags}
 elif test "${tttHaveGcc}" = "yes" ; then
-  CFLAGS="-O6"
+  CFLAGS="-O2"
 else
   CFLAGS="-O"
 fi
@@ -181,13 +181,19 @@ guesses="\
  $ttt_ckcmd_tcl_home \
  $ttt_ckcmd_tcl_home/lib \
  $ttt_cv_tcl_lib \
+ /usr/local/lib/tcl8.3 \
+ /usr/local/lib/tcl8.2 \
  /usr/local/lib/tcl8.0 \
  /usr/local/lib/tcl7.6 \
  /usr/local/lib/tcl7.5 \
  /usr/local/tcl/lib \
+ /usr/local/tcl/tcl8.3/lib \
+ /usr/local/tcl/tcl8.2/lib \
  /usr/local/tcl/tcl8.0/lib \
  /usr/local/tcl/tcl7.6/lib \
  /usr/local/tcl/tcl7.5/lib \
+ $PWD/../tcl8.3 \
+ $PWD/../tcl8.2 \
  $PWD/../tcl8.0 \
  $PWD/../tcl7.6 \
  $PWD/../tcl7.5 \
@@ -230,13 +236,19 @@ guesses="\
  $ttt_ckcmd_tcl_home \
  $ttt_ckcmd_tcl_home/lib \
  $ttt_cv_tk_lib \
+ /usr/local/lib/tk8.3 \
+ /usr/local/lib/tk8.2 \
  /usr/local/lib/tk8.0 \
  /usr/local/lib/tk4.2 \
  /usr/local/lib/tk4.1 \
  /usr/local/tcl/lib \
+ /usr/local/tcl/tk8.3/lib \
+ /usr/local/tcl/tk8.2/lib \
  /usr/local/tcl/tk8.0/lib \
  /usr/local/tcl/tk4.2/lib \
  /usr/local/tcl/tk4.1/lib \
+ $PWD/../tk8.3 \
+ $PWD/../tk8.2 \
  $PWD/../tk8.0 \
  $PWD/../tk4.2 \
  $PWD/../tk4.1 \
@@ -270,16 +282,24 @@ guesses="\
  $ttt_ckcmd_tcl_home \
  $ttt_ckcmd_tcl_home/lib \
  $ttt_cv_tk_lib \
+ /usr/local/lib/tk8.3 \
+ /usr/local/lib/tk8.2 \
  /usr/local/lib/tk8.0 \
  /usr/local/lib/tk4.2 \
  /usr/local/lib/tk4.1 \
+ /usr/local/lib/tcl8.3 \
+ /usr/local/lib/tcl8.2 \
  /usr/local/lib/tcl8.0 \
  /usr/local/lib/tcl7.6 \
  /usr/local/lib/tcl7.5 \
  /usr/local/tcl/lib \
+ /usr/local/tcl/tk8.3/lib \
+ /usr/local/tcl/tk8.2/lib \
  /usr/local/tcl/tk8.0/lib \
  /usr/local/tcl/tk4.2/lib \
  /usr/local/tcl/tk4.1/lib \
+ /usr/local/tcl/tcl8.3/lib \
+ /usr/local/tcl/tcl8.2/lib \
  /usr/local/tcl/tcl8.0/lib \
  /usr/local/tcl/tcl7.6/lib \
  /usr/local/tcl/tcl7.5/lib \

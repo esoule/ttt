@@ -1,4 +1,4 @@
-/* $Id: net_read.c,v 0.10 1999/03/21 11:17:06 kjc Exp $ */
+/* $Id: net_read.c,v 0.12 2000/06/09 07:43:27 kjc Exp kjc $ */
 /*
  *  Copyright (c) 1996
  *	Sony Computer Science Laboratory Inc.  All rights reserved.
@@ -109,6 +109,8 @@ char *cmdbuf;
 pcap_t *pd;
 int pcapfd;
 
+static int packet_length;		/* length of current packet */
+
 /* a function switch to read different types of frames */
 void (*ttt_netreader)(u_char *user, const struct pcap_pkthdr *h, const u_char *p);
 
@@ -217,6 +219,7 @@ static void ether_if_read(u_char *user, const struct pcap_pkthdr *h,
     struct ether_header *ep;
     u_short ether_type;
 
+    packet_length = length;  /* save data link level packet length */
     if (caplen < sizeof(struct ether_header)) {
 	return;
     }
@@ -245,7 +248,7 @@ static int ether_encap_read(const u_short ethtype, const u_char *p,
     /* people love to see the total traffic! */
     if (ethtype != ETHERTYPE_IP)
 #endif
-	eth_addsize(ethtype, length);
+	eth_addsize(ethtype, packet_length);
 
     if (ethtype == ETHERTYPE_IP)
 	ip_read(p, length, caplen);
@@ -264,6 +267,7 @@ static void fddi_if_read(u_char *pcap, const struct pcap_pkthdr *h,
     int length = h->len;
     const struct fddi_header *fddip = (struct fddi_header *)p;
 
+    packet_length = length;  /* save data link level packet length */
     if (caplen < FDDI_HDRLEN)
 	return;
     
@@ -347,6 +351,7 @@ static void atm_if_read(u_char *pcap, const struct pcap_pkthdr *h,
     int length = h->len;
     u_short ether_type;
 
+    packet_length = length;  /* save data link level packet length */
     if (caplen < 8)
 	return;
 
@@ -356,7 +361,7 @@ static void atm_if_read(u_char *pcap, const struct pcap_pkthdr *h,
     }
     ether_type = p[6] << 8 | p[7];
 
-    eth_addsize(ether_type, length);
+    eth_addsize(ether_type, packet_length);
     
     length -= 8;
     caplen -= 8;
@@ -384,6 +389,7 @@ sl_if_print(u_char *user, const struct pcap_pkthdr *h, const u_char *p)
     int caplen = h->caplen;
     int length = h->len;
 
+    packet_length = length;  /* save data link level packet length */
     if (caplen < SLIP_HDRLEN)
 	return;
 
@@ -401,6 +407,7 @@ static void ppp_if_read(u_char *pcap, const struct pcap_pkthdr *h,
     int caplen = h->caplen;
     int length = h->len;
 
+    packet_length = length;  /* save data link level packet length */
     if (caplen < 4)
 	return;
 
@@ -417,6 +424,7 @@ static void null_if_read(u_char *user, const struct pcap_pkthdr *h, const u_char
 	int caplen = h->caplen;
 	const struct ip *ip;
 
+	packet_length = length;  /* save data link level packet length */
 	length -= NULL_HDRLEN;
 	caplen -= NULL_HDRLEN;
 	ip = (struct ip *)(p + NULL_HDRLEN);
@@ -455,6 +463,8 @@ static int ip_read(const u_char *bp, const int length, const int caplen)
     hlen = ip->ip_hl * 4;
     len = ntohs(ip->ip_len);
     len -= hlen;
+    if (len < 0)
+	return 0;
     bp = (u_char *)ip + hlen;
 
     srcaddr = ntohl(ip->ip_src.s_addr);
@@ -462,15 +472,15 @@ static int ip_read(const u_char *bp, const int length, const int caplen)
     proto = ip->ip_p;
 
     if (!(ttt_filter & TTTFILTER_SRCHOST)) {
-	host_addsize(srcaddr, len);
+	host_addsize(srcaddr, packet_length);
 	if (!(ttt_filter & TTTFILTER_DSTHOST) && srcaddr != dstaddr)
-	    host_addsize(dstaddr, len);
+	    host_addsize(dstaddr, packet_length);
     }
     else if (!(ttt_filter & TTTFILTER_DSTHOST))
-	host_addsize(dstaddr, len);
+	host_addsize(dstaddr, packet_length);
 
     if (proto != IPPROTO_TCP && proto != IPPROTO_UDP) 
-	ip_addsize(proto, len);
+	ip_addsize(proto, packet_length);
     else {
 	/* if this is fragment zero, hand it to the next higher
 	   level protocol. */
@@ -489,13 +499,13 @@ static int ip_read(const u_char *bp, const int length, const int caplen)
 	    srcport = ntohs(tcp->th_sport);
 	    dstport = ntohs(tcp->th_dport);
 	    if (!(ttt_filter & TTTFILTER_SRCPORT)) {
-		tcp_addsize(srcport, len);
+		tcp_addsize(srcport, packet_length);
 		if (dstport != srcport
 		    && !(ttt_filter & TTTFILTER_DSTPORT))
-		    tcp_addsize(dstport, len);
+		    tcp_addsize(dstport, packet_length);
 	    }
 	    else if (!(ttt_filter & TTTFILTER_DSTPORT))
-		tcp_addsize(dstport, len);
+		tcp_addsize(dstport, packet_length);
 	}
 	else {
 	    if (len < sizeof (struct udphdr))
@@ -504,13 +514,13 @@ static int ip_read(const u_char *bp, const int length, const int caplen)
 	    srcport = ntohs(udp->uh_sport);
 	    dstport = ntohs(udp->uh_dport);
 	    if (!(ttt_filter & TTTFILTER_SRCPORT)) {
-		udp_addsize(srcport, len);
+		udp_addsize(srcport, packet_length);
 		if (dstport != srcport
 		    && !(ttt_filter & TTTFILTER_DSTPORT))
-		    udp_addsize(dstport, len);
+		    udp_addsize(dstport, packet_length);
 	    }
 	    else if (!(ttt_filter & TTTFILTER_DSTPORT))
-		udp_addsize(dstport, len);
+		udp_addsize(dstport, packet_length);
 	}
 
 	/* if this is a first fragment, cache it. */
@@ -654,6 +664,8 @@ static int ipv6_read(const u_char *bp, const int length, const int caplen)
 
     hlen = read_ipv6hdr(ipv6, &proto, caplen);
     len = ntohs(ipv6->ipv6_len) + sizeof(struct ipv6) - hlen;
+    if (len < 0)
+	return 0;
     bp = (u_char *)ipv6 + hlen;
 
     bcopy(&ipv6->ipv6_src, srcaddr, sizeof(struct in6_addr));
@@ -669,16 +681,16 @@ static int ipv6_read(const u_char *bp, const int length, const int caplen)
     dstaddr[3] = ntohl(dstaddr[3]);
 
     if (!(ttt_filter & TTTFILTER_SRCHOST)) {
-	hostv6_addsize(srcaddr, len);
+	hostv6_addsize(srcaddr, packet_length);
 	if (!(ttt_filter & TTTFILTER_DSTHOST)
 	    && bcmp(srcaddr, dstaddr, sizeof(srcaddr)))
-	    hostv6_addsize(dstaddr, len);
+	    hostv6_addsize(dstaddr, packet_length);
     }
     else if (!(ttt_filter & TTTFILTER_DSTHOST))
-	hostv6_addsize(dstaddr, len);
+	hostv6_addsize(dstaddr, packet_length);
 
     if (proto != IPPROTO_TCP && proto != IPPROTO_UDP) 
-	ipv6_addsize(proto, len);
+	ipv6_addsize(proto, packet_length);
     else if (proto == IPPROTO_TCP) {
 	if (len < sizeof (struct tcphdr))
 	    return 0;
@@ -686,13 +698,13 @@ static int ipv6_read(const u_char *bp, const int length, const int caplen)
 	srcport = ntohs(tcp->th_sport);
 	dstport = ntohs(tcp->th_dport);
 	if (!(ttt_filter & TTTFILTER_SRCPORT)) {
-	    tcpv6_addsize(srcport, len);
+	    tcpv6_addsize(srcport, packet_length);
 	    if (dstport != srcport
 		&& !(ttt_filter & TTTFILTER_DSTPORT))
-		tcpv6_addsize(dstport, len);
+		tcpv6_addsize(dstport, packet_length);
 	}
 	else if (!(ttt_filter & TTTFILTER_DSTPORT))
-	    tcpv6_addsize(dstport, len);
+	    tcpv6_addsize(dstport, packet_length);
     }
     else {
 	if (len < sizeof (struct udphdr))
@@ -701,13 +713,13 @@ static int ipv6_read(const u_char *bp, const int length, const int caplen)
 	srcport = ntohs(udp->uh_sport);
 	dstport = ntohs(udp->uh_dport);
 	if (!(ttt_filter & TTTFILTER_SRCPORT)) {
-	    udpv6_addsize(srcport, len);
+	    udpv6_addsize(srcport, packet_length);
 	    if (dstport != srcport
 		&& !(ttt_filter & TTTFILTER_DSTPORT))
-		udpv6_addsize(dstport, len);
+		udpv6_addsize(dstport, packet_length);
 	}
 	else if (!(ttt_filter & TTTFILTER_DSTPORT))
-	    udpv6_addsize(dstport, len);
+	    udpv6_addsize(dstport, packet_length);
     }
     return 1;
 }
