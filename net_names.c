@@ -1,4 +1,4 @@
-/* $Id: net_names.c,v 0.4 1998/07/09 10:07:03 kjc Exp kjc $ */
+/* $Id: net_names.c,v 0.4 1998/07/09 10:07:03 kjc Exp $ */
 /*
  *  Copyright (c) 1996
  *	Sony Computer Science Laboratory Inc.  All rights reserved.

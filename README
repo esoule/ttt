@@ -1,7 +1,7 @@
 
-	TTT: Tele Traffic Tapper (version 1.1)
+	TTT: Tele Traffic Tapper (version 1.2)
 
-					98/07/09
+					98/07/15
 
 ttt is yet another descendant of tcpdump but it is capable of real-time,
 graphical, and remote traffic-monitoring.  ttt won't replace tcpdump,
@@ -392,6 +392,13 @@ Send bug reports, suggestions, etc. to
 
 
 CHANGES:
+
+98/07/15	version-1.2
+		
+		fix duplicated byte counting for fragmented UDP.
+
+		fix to make net_read.c compiled under FreeBSD's new
+		queue macros.
 
 98/07/09	version-1.1
 

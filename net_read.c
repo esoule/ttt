@@ -1,4 +1,4 @@
-/* $Id: net_read.c,v 0.7 1998/07/09 10:07:03 kjc Exp kjc $ */
+/* $Id: net_read.c,v 0.8 1998/07/15 04:56:01 kjc Exp $ */
 /*
  *  Copyright (c) 1996
  *	Sony Computer Science Laboratory Inc.  All rights reserved.
@@ -128,13 +128,16 @@ static TAILQ_HEAD(ip4f_list, ip4_frag) ip4f_list; /* IPv4 fragment cache */
 
 #define IP4F_TABSIZE		8	/* IPv4 fragment cache size */
 
-/* the following macros are FreeBSD extension */
+/*
+ * the following macros are FreeBSD extension.  there are two incompatible
+ * TAILQ_LAST defines in FreeBSD (changed after 2.2.6), so use the new one.
+ */
 #ifndef TAILQ_EMPTY
 #define	TAILQ_EMPTY(head) ((head)->tqh_first == NULL)
 #endif
-#ifndef TAILQ_LAST
-#define	TAILQ_LAST(head) ((head)->tqh_last)
-#endif
+#undef TAILQ_LAST
+#define	TAILQ_LAST(head, headname) \
+	(*(((struct headname *)((head)->tqh_last))->tqh_last))
 
 void net_read(int clientdata, int mask);
 static void ether_if_read(u_char *user, const struct pcap_pkthdr *h,
@@ -437,7 +440,6 @@ static int ip_read(const u_char *bp, const int length, const int caplen)
 	    udp = (struct udphdr *)bp;
 	    srcport = ntohs(udp->uh_sport);
 	    dstport = ntohs(udp->uh_dport);
-	    len = ntohs(udp->uh_ulen);
 	    udp_addsize(srcport, len);
 	    if (dstport != srcport)
 		udp_addsize(dstport, len);
@@ -537,7 +539,7 @@ static struct ip4_frag *ip4f_alloc(void)
     struct ip4_frag *fp;
 
     /* reclaim an entry at the tail, put it at the head */
-    fp = (struct ip4_frag *)TAILQ_LAST(&ip4f_list);
+    fp = TAILQ_LAST(&ip4f_list, ip4f_list);
     TAILQ_REMOVE(&ip4f_list, fp, ip4f_chain);
     fp->ip4f_valid = 1;
     TAILQ_INSERT_HEAD(&ip4f_list, fp, ip4f_chain);

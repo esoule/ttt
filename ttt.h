@@ -1,4 +1,4 @@
-/* $Id: ttt.h,v 0.5 1998/07/08 13:17:09 kjc Exp $ */
+/* $Id: ttt.h,v 0.6 1998/07/15 04:56:01 kjc Exp $ */
 /*
  *  Copyright (c) 1996
  *	Sony Computer Science Laboratory Inc.  All rights reserved.
@@ -20,8 +20,8 @@
 #include <sys/types.h>
 
 #define TTT_MAJOR	1
-#define TTT_MINOR	1
-#define TTT_VERSION	"1.1"
+#define TTT_MINOR	2
+#define TTT_VERSION	"1.2"
 
 /* default path for ttt.tcl */
 #ifndef TTT_LIBRARY
