@@ -1,4 +1,4 @@
-/* $Id: ttt_remote.h,v 0.1 1996/06/30 12:52:32 kjc Exp kjc $ */
+/* $Id: ttt_remote.h,v 0.1 1996/06/30 12:52:32 kjc Exp $ */
 /* ttt_remote.h -- ttt report protocol packet format. */
 #ifndef _TTT_REMOTE_H_
 #define _TTT_REMOTE_H_

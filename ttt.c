@@ -1,4 +1,4 @@
-/* $Id: ttt.c,v 0.9 2003/06/25 09:38:28 kjc Exp kjc $ */
+/* $Id: ttt.c,v 0.9 2003/06/25 09:38:28 kjc Exp $ */
 /*
  *  Copyright (c) 1996-2000
  *	Sony Computer Science Laboratories, Inc.  All rights reserved.

@@ -1,4 +1,4 @@
-/* $Id: net_read.c,v 0.19 2003/10/16 11:55:00 kjc Exp kjc $ */
+/* $Id: net_read.c,v 0.19 2003/10/16 11:55:00 kjc Exp $ */
 /*
  *  Copyright (c) 1996-2003
  *	Sony Computer Science Laboratories, Inc.  All rights reserved.

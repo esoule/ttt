@@ -1,4 +1,4 @@
-/* $Id: node_emu.c,v 0.1 1996/06/30 12:52:56 kjc Exp kjc $ */
+/* $Id: node_emu.c,v 0.1 1996/06/30 12:52:56 kjc Exp $ */
 /* node_emu.c -- dummy routines of node.c used by viewers */
 #include <stdio.h>
 #include "ttt.h"

@@ -31,7 +31,7 @@
  * SUCH DAMAGE.
  *
  *	@(#)queue.h	8.5 (Berkeley) 8/20/94
- * $Id: bsd_sys_queue.h,v 1.1 1997/08/17 08:52:43 kjc Exp kjc $
+ * $Id: bsd_sys_queue.h,v 1.1 1997/08/17 08:52:43 kjc Exp $
  */
 
 #ifndef _SYS_QUEUE_H_

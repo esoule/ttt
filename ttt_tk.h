@@ -1,4 +1,4 @@
-/* $Id: ttt_tk.h,v 0.2 2003/10/16 10:38:32 kjc Exp kjc $ */
+/* $Id: ttt_tk.h,v 0.2 2003/10/16 10:38:32 kjc Exp $ */
 /* ttt_tk.h -- tk-related header */
 #ifndef _TTT_TK_H_
 #define _TTT_TK_H_

@@ -1,4 +1,4 @@
-/* $Id: pcap_inet.c,v 0.6 2003/10/16 11:00:23 kjc Exp kjc $ */
+/* $Id: pcap_inet.c,v 0.6 2003/10/16 11:00:23 kjc Exp $ */
 /* completely derived from libpcap in order that viewers can be compiled
    without libpcap installed.  */
 /*

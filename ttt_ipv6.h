@@ -1,4 +1,4 @@
-/* $Id: ttt_ipv6.h,v 0.2 2000/12/20 14:29:45 kjc Exp kjc $ */
+/* $Id: ttt_ipv6.h,v 0.2 2000/12/20 14:29:45 kjc Exp $ */
 /* ttt_ipv6.h -- minimum defines and data structures to understand
    ipv6 packets */
 
@@ -38,7 +38,7 @@ struct in6_addr {
 #if !defined(IPV6VERSION) && (IPVERSION != 6)
 /* 
  * IPv6 code by keiiti-s@is.aist-nara.ac.jp
- * 	$Id: ttt_ipv6.h,v 0.2 2000/12/20 14:29:45 kjc Exp kjc $
+ * 	$Id: ttt_ipv6.h,v 0.2 2000/12/20 14:29:45 kjc Exp $
  */
 
 #define	IPV6VERSION	6

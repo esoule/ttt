@@ -57,9 +57,9 @@ TTT_OBJS=	ttt.o tk_ttt.o common.o display.o account.o net_names.o \
 		window.o node.o net_read.o
 PROBE_OBJS=	probe.o common.o account.o remote.o node.o net_read.o
 VIEW_OBJS=	tk_view.o common.o remote.o display.o net_names.o \
-		window.o viewer.o node_emu.o pcap_inet.o
+		window.o viewer.o node_emu.o
 TEXTVIEW_OBJS=	textview.o common.o net_names.o remote.o \
-		window.o text_viewer.o node_emu.o pcap_inet.o
+		window.o text_viewer.o node_emu.o
 
 TTT_HEADERS=	ttt.h ttt_tk.h ttt_remote.h ttt_window.h ttt_node.h
 

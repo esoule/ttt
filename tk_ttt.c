@@ -1,4 +1,4 @@
-/* $Id: tk_ttt.c,v 0.9 2003/10/16 10:38:32 kjc Exp kjc $ */
+/* $Id: tk_ttt.c,v 0.10 2004/05/19 10:20:35 kjc Exp kjc $ */
 /*
  *  Copyright (c) 1996-2000
  *	Sony Computer Science Laboratories, Inc.  All rights reserved.
@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
 #include <errno.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -187,8 +188,9 @@ void call_dumpread(ClientData client_data)
     int interval, rval;
 
     rval = dumpfile_read();
-    ttt_display(time_tick);
-    if (rval > 0) {
+    if (ttt_dumptime.tv_sec > 0)
+	    ttt_display(time_tick);
+    if (rval > 0 || (rval == 0 && strcmp(ttt_dumpfile, "-") == 0)) {
 	if (ttt_speed == 0)
 	    interval = 0;
 	else
@@ -392,6 +394,21 @@ main(argc, argv)
     view_parseargs(argc, argv);
 #endif /* !TTT_VIEW */
 #endif
+
+    /*
+     * if we are reading a dump file from stdin, disable tcl's input
+     * processing.  also, set stdin to nonblocking.
+     */
+    if (ttt_dumpfile != NULL && strcmp(ttt_dumpfile, "-") == 0) {
+	    int flags;
+
+	    Tcl_SetStdChannel(NULL, TCL_STDIN);
+
+	    if ((flags = fcntl(0, F_GETFL, 0)) < 0)
+		    fprintf(stderr, "fcntl F_GETFL failed\n");
+	    else if (fcntl(0, F_SETFL, flags | O_NONBLOCK) < 0)
+		    fprintf(stderr, "fcntl F_SETFL failed\n");
+    }
 
     Tk_Main(argc, argv, Tcl_AppInit);
     return 0;			/* Needed only to prevent compiler warning. */

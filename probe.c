@@ -1,4 +1,4 @@
-/* $Id: probe.c,v 0.3 2003/10/16 10:38:32 kjc Exp kjc $ */
+/* $Id: probe.c,v 0.3 2003/10/16 10:38:32 kjc Exp $ */
 /*
  *  Copyright (c) 1996-2000
  *	Sony Computer Science Laboratories, Inc.  All rights reserved.

@@ -1,4 +1,4 @@
-/* $Id: ttt_node.h,v 0.2 2000/12/20 14:29:45 kjc Exp kjc $ */
+/* $Id: ttt_node.h,v 0.2 2000/12/20 14:29:45 kjc Exp $ */
 /*
  *  Copyright (c) 1996-2000
  *	Sony Computer Science Laboratories, Inc.  All rights reserved.

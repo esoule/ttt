@@ -1,4 +1,4 @@
-/* $Id: node.c,v 0.4 2003/10/16 12:09:19 kjc Exp kjc $ */
+/* $Id: node.c,v 0.5 2004/05/19 10:20:35 kjc Exp kjc $ */
 /*
  *  Copyright (c) 1996-2000
  *	Sony Computer Science Laboratories, Inc.  All rights reserved.

@@ -1,4 +1,4 @@
-/* $Id: ttt_pcap.h,v 0.1 1996/06/30 12:52:32 kjc Exp kjc $ */
+/* $Id: ttt_pcap.h,v 0.1 1996/06/30 12:52:32 kjc Exp $ */
 /* ttt_pcap.h -- minimum set from tcpdump to read 802.3 frames */
 
 /*
@@ -53,7 +53,7 @@ struct llc {
 #endif
 
 /*
- * @(#) $Header: /src/kjc/src/ttt/RCS/ttt_pcap.h,v 0.1 1996/06/30 12:52:32 kjc Exp kjc $ (LBL)
+ * @(#) $Header: /src/kjc/src/ttt/RCS/ttt_pcap.h,v 0.1 1996/06/30 12:52:32 kjc Exp $ (LBL)
  */
 
 struct fddi_header {

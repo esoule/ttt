@@ -1,4 +1,4 @@
-/* $Id: common.c,v 0.8 2003/10/16 11:55:00 kjc Exp kjc $ */
+/* $Id: common.c,v 0.8 2003/10/16 11:55:00 kjc Exp $ */
 /*
  *  Copyright (c) 1996-2000
  *	Sony Computer Science Laboratories, Inc.  All rights reserved.
