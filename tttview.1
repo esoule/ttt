@@ -21,6 +21,9 @@ ttt \- remote viewer for Tele Traffic Tapper
 ] [
 .B \-probe
 .I addr
+] [
+.B \-yscale
+.I 'K'|'M'|n
 ]
 .br
 .SH DESCRIPTION
@@ -58,6 +61,10 @@ The default is 7288.
 .B \-probe
 Specifies the address of \fItttprobe(1)\fP.
 Only useful to select one among multiple probes.
+.TP
+.B \-yscale
+Specifies the scale of y axis.
+\fIK\fR and \fIM\fR represent 1000 and 1000000 respectively.
 
 .SH SEE ALSO
 ttt(1), tttprobe(1), BLT(n)

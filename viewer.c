@@ -1,7 +1,7 @@
-/* $Id: viewer.c,v 0.5 1998/07/09 10:07:03 kjc Exp $ */
+/* $Id: viewer.c,v 0.6 2000/12/20 14:29:45 kjc Exp kjc $ */
 /*
- *  Copyright (c) 1996
- *	Sony Computer Science Laboratory Inc.  All rights reserved.
+ *  Copyright (c) 1996-2000
+ *	Sony Computer Science Laboratories, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms of parts of or the
  * whole original or derived work are permitted provided that the above
@@ -55,6 +55,7 @@ static void usage()
     printf("    [-mcastifaddr mcast_if_addr]\n");
     printf("	[-port recv_port]\n");
     printf("	[-probe probe_addr]\n");
+    printf("    [-yscale 'K'|'M'|n]\n");
     exit(1);
 }
 
@@ -73,6 +74,14 @@ void view_parseargs(int argc, char **argv)
 	    ttt_portno = atoi(argv[i]);
         else if (strncmp(argv[i], "-probe", 4) == 0 && ++i < argc)
 	    probe_name = argv[i];
+	else if (strcmp(argv[i], "-yscale") == 0 && ++i < argc) {
+	    if (toupper(argv[i][0]) == 'K')
+		ttt_yscale = 1000;
+	    else if (toupper(argv[i][0]) == 'M')
+		ttt_yscale = 1000000;
+	    else
+		ttt_yscale = strtol(argv[i], NULL, 0);
+	}
 	else if (strcmp(argv[i], "-help") == 0 ||
 		 strcmp(argv[i], "--help") == 0 ||
 		 strcmp(argv[i], "-h") == 0)

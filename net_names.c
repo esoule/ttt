@@ -1,7 +1,7 @@
-/* $Id: net_names.c,v 0.5 1999/03/21 11:17:06 kjc Exp $ */
+/* $Id: net_names.c,v 0.6 2000/12/20 14:29:45 kjc Exp kjc $ */
 /*
- *  Copyright (c) 1996
- *	Sony Computer Science Laboratory Inc.  All rights reserved.
+ *  Copyright (c) 1996-2000
+ *	Sony Computer Science Laboratories, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms of parts of or the
  * whole original or derived work are permitted provided that the above
@@ -503,7 +503,7 @@ static char *intoa(u_int32 addr)
 
 #ifdef IPV6
 /* derived from ascii_addr.c */
-#ifndef BSD4_4
+#if !defined(BSD4_4) && !(defined(__linux__) && defined(__USE_BSD))
 typedef u_long	u_int32_t;
 typedef u_short	u_int16_t;
 #endif

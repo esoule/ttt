@@ -1,4 +1,4 @@
-/* $Id: ttt_ipv6.h,v 0.1 1996/06/30 12:52:32 kjc Exp $ */
+/* $Id: ttt_ipv6.h,v 0.2 2000/12/20 14:29:45 kjc Exp kjc $ */
 /* ttt_ipv6.h -- minimum defines and data structures to understand
    ipv6 packets */
 
@@ -11,6 +11,9 @@
 #define	IPPROTO_IPV6		41		/* IPv6 encapsulated in IP */
 #define	IPPROTO_ICMPV6		58		/* ICMP for IPv6 */
 
+#endif /* !IPPROTO_IPV6 */
+
+#ifndef INET6_ADDRSTRLEN
 /*
  * IPv6 address data structures.
  */
@@ -18,8 +21,7 @@
 struct in6_addr {
 	u_char	s6_addr[16];	/* IPv6 address */
 };
-
-#endif /* !IPPROTO_IPV6 */
+#endif /* !INET6_ADDRSTRLEN */
 
 #ifndef IPV6_NH_HOP
 
@@ -36,7 +38,7 @@ struct in6_addr {
 #if !defined(IPV6VERSION) && (IPVERSION != 6)
 /* 
  * IPv6 code by keiiti-s@is.aist-nara.ac.jp
- * 	$Id: ttt_ipv6.h,v 0.1 1996/06/30 12:52:32 kjc Exp $
+ * 	$Id: ttt_ipv6.h,v 0.2 2000/12/20 14:29:45 kjc Exp kjc $
  */
 
 #define	IPV6VERSION	6

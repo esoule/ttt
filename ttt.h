@@ -1,7 +1,7 @@
-/* $Id: ttt.h,v 0.9 2000/06/09 06:42:02 kjc Exp kjc $ */
+/* $Id: ttt.h,v 0.10 2000/12/20 14:29:45 kjc Exp kjc $ */
 /*
- *  Copyright (c) 1996
- *	Sony Computer Science Laboratory Inc.  All rights reserved.
+ *  Copyright (c) 1996-2000
+ *	Sony Computer Science Laboratories, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms of parts of or the
  * whole original or derived work are permitted provided that the above
@@ -20,8 +20,8 @@
 #include <sys/types.h>
 
 #define TTT_MAJOR	1
-#define TTT_MINOR	5
-#define TTT_VERSION	"1.5"
+#define TTT_MINOR	6
+#define TTT_VERSION	"1.6"
 
 /* default path for ttt.tcl */
 #ifndef TTT_LIBRARY
@@ -75,6 +75,7 @@ extern int ttt_nohostname;	/* don't lookup host names */
 extern int ttt_filter;		/* trace filter */
 extern char *ttt_dumpfile;	/* tcpdump file to replay */
 extern int ttt_speed;		/* replay speed */
+extern int ttt_yscale;		/* scale of y axis */
 extern struct timeval ttt_dumptime;
 
 extern void fatal_error(/*const char *fmt, ...*/);

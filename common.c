@@ -1,7 +1,7 @@
-/* $Id: common.c,v 0.4 1998/09/22 06:22:28 kjc Exp $ */
+/* $Id: common.c,v 0.5 2000/12/20 14:29:45 kjc Exp kjc $ */
 /*
- *  Copyright (c) 1996
- *	Sony Computer Science Laboratory Inc.  All rights reserved.
+ *  Copyright (c) 1996-2000
+ *	Sony Computer Science Laboratories, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms of parts of or the
  * whole original or derived work are permitted provided that the above
@@ -39,7 +39,8 @@ int ttt_speed = 1;		/* replay speed */
 struct timeval ttt_dumptime;
 char *ttt_viewname = NULL;
 char *ttt_mcastif = NULL;
-int ttt_portno = TTT_PORT;		/* receiver's port number */
+int ttt_portno = TTT_PORT;	/* receiver's port number */
+int ttt_yscale = 1000000;	/* scale of y axis (Mbps by default) */
 
 #include <stdio.h>
 #include <errno.h>

@@ -1,7 +1,7 @@
-/* $Id: net_read.c,v 0.12 2000/06/09 07:43:27 kjc Exp kjc $ */
+/* $Id: net_read.c,v 0.13 2000/12/20 14:29:45 kjc Exp kjc $ */
 /*
- *  Copyright (c) 1996
- *	Sony Computer Science Laboratory Inc.  All rights reserved.
+ *  Copyright (c) 1996-2000
+ *	Sony Computer Science Laboratories, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms of parts of or the
  * whole original or derived work are permitted provided that the above
@@ -95,13 +95,9 @@ char copyright[] =
 #else
 #define DEFAULT_SNAPLEN 68
 #endif
-#if defined(BSD) && (BSD >= 199103)
-/* make use of the large buffer patch to libpcap.  only for bpf.
-   this doesn't do any harm if the patch hasn't been applied. */
-#define USE_LARGEBUF
+#ifndef ETHERTYPE_PPPOE
+#define	ETHERTYPE_PPPOE		0x8864	/* PPP Over Ethernet Session Stage */
 #endif
-
-#define	NULL_HDRLEN 4	/* DLT_NULL header length */
 
 char errbuf[PCAP_ERRBUF_SIZE];
 char *device;
@@ -154,11 +150,20 @@ static void sl_if_read(u_char *user, const struct pcap_pkthdr *h,
 			 const u_char *p);
 static void ppp_if_read(u_char *user, const struct pcap_pkthdr *h,
 			 const u_char *p);
+#ifdef DLT_PPP_BSDOS
+static void ppp_bsdos_if_read(u_char *user, const struct pcap_pkthdr *h,
+			      const u_char *p);
+#endif
+#ifdef DLT_PPP_SERIAL	/* netbsd specific */
+static void ppp_netbsd_serial_if_read(u_char *user,
+			      const struct pcap_pkthdr *h, const u_char *p);
+#endif
 static void null_if_read(u_char *user, const struct pcap_pkthdr *h,
 			 const u_char *p);
 static int ether_encap_read(const u_short ethtype, const u_char *p,
 			    const int length, const int caplen);
 static int llc_read(const u_char *p, const int length, const int caplen);
+static int pppoe_read(const u_char *bp, const int length, const int caplen);
 static int ip_read(const u_char *bp, const int length, const int caplen);
 static void ip4f_cache(struct ip *, struct udphdr *);
 static struct udphdr *ip4f_lookup(struct ip *);
@@ -243,19 +248,40 @@ static void ether_if_read(u_char *user, const struct pcap_pkthdr *h,
 static int ether_encap_read(const u_short ethtype, const u_char *p,
 			    const int length, const int caplen)
 {
-
 #if 0
     /* people love to see the total traffic! */
     if (ethtype != ETHERTYPE_IP)
 #endif
 	eth_addsize(ethtype, packet_length);
 
-    if (ethtype == ETHERTYPE_IP)
+ recurse:
+    switch (ethtype) {
+    case ETHERTYPE_IP:
 	ip_read(p, length, caplen);
+	break;
 #ifdef IPV6
-    else if (ethtype == ETHERTYPE_IPV6)
+    case ETHERTYPE_IPV6:
 	ipv6_read(p, length, caplen);
+	break;
 #endif
+#ifdef ETHERTYPE_8021Q
+	case ETHERTYPE_8021Q:
+		ethtype = ntohs(*(unsigned short*)(p+2));
+		p += 4;
+		length -= 4;
+		caplen -= 4;
+		if (ethtype <= ETHERMTU)
+			/* ether_type not known */
+			break;
+		goto recurse;
+	break;
+#endif
+    case ETHERTYPE_PPPOE:
+	    pppoe_read(p, length, caplen);
+	    break;
+    default:
+	    break;
+    }
     return (1);
 }
 
@@ -400,24 +426,184 @@ sl_if_print(u_char *user, const struct pcap_pkthdr *h, const u_char *p)
     ip_read(p, length, caplen);
 }
 
-/* just trim 4 byte ppp header */
+#ifndef PPP_HDRLEN
+#define PPP_HDRLEN 4
+#endif
+#define PPP_IP		0x21	/* Internet Protocol */
+#define PPP_IPV6	0x57	/* Internet Protocol Version 6 */
+
 static void ppp_if_read(u_char *pcap, const struct pcap_pkthdr *h,
 			const u_char *p)
 {
     int caplen = h->caplen;
     int length = h->len;
+    const struct ip *ip;
+    u_int proto;
 
     packet_length = length;  /* save data link level packet length */
-    if (caplen < 4)
+    if (caplen < PPP_HDRLEN)
 	return;
 
-    length -= 4;
-    caplen -= 4;
-    p += 4;
+    proto = ntohs(*(u_short *)&p[2]);
 
-    ip_read(p, length, caplen);
+    length -= PPP_HDRLEN;
+    caplen -= PPP_HDRLEN;
+    p += PPP_HDRLEN;
+
+    ip = (struct ip *)p;
+    switch (proto) {
+    case ETHERTYPE_IP:
+    case PPP_IP:
+	ip_read(p, length, caplen);
+	break;
+#ifdef IPV6
+    case ETHERTYPE_IPV6:
+    case PPP_IPV6:
+	ipv6_read(p, length, caplen);
+	break;
+#endif
+    }
 }
 
+#ifdef DLT_PPP_BSDOS
+/* BSD/OS specific PPP printer */
+#ifndef PPP_BSDI_HDRLEN
+#define PPP_BSDI_HDRLEN 24
+#endif
+#define PPP_ADDRESS	0xff	/* The address byte value */
+#define PPP_CONTROL	0x03	/* The control byte value */
+
+/* BSD/OS specific PPP printer */
+
+static void ppp_bsdos_if_read(u_char *pcap, const struct pcap_pkthdr *h,
+			      const u_char *p)
+{
+    int caplen = h->caplen;
+    int length = h->len;
+    int hdrlength;
+    u_short ptype;
+
+    packet_length = length;  /* save data link level packet length */
+    if (caplen < PPP_BSDI_HDRLEN)
+	return;
+
+    hdrlength = 0;
+    if (p[0] == PPP_ADDRESS && p[1] == PPP_CONTROL) {
+	p += 2;
+	hdrlength = 2;
+    }
+    /* Retrieve the protocol type */
+    if (*p & 01) {
+	/* Compressed protocol field */
+	ptype = *p;
+	p++;
+	hdrlength += 1;
+    } else {
+	/* Un-compressed protocol field */
+	ptype = ntohs(*(u_short *)p);
+	p += 2;
+	hdrlength += 2;
+    }
+
+    length -= hdrlength;
+    caplen -= hdrlength;
+
+    switch (ptype) {
+    case PPP_IP:
+	ip_read(p, length, caplen);
+	break;
+#ifdef IPV6
+    case PPP_IPV6:
+	ipv6_read(p, length, caplen);
+	break;
+#endif
+    }
+}
+#endif /* DLT_PPP_BSDOS */
+
+#ifdef DLT_PPP_SERIAL	/* netbsd specific */
+/*
+ * NetBSD-specific PPP printers.  Handles multiple PPP encaps, and
+ * Cisco frames.
+ */
+#define	PPP_NETBSD_SERIAL_HDRLEN	4
+/* Actual address byte values */
+#define	PPP_ADDR_ALLSTATIONS	0xff	/* all stations broadcast addr */
+#define	PPP_ADDR_CISCO_MULTICAST 0x8f	/* Cisco multicast address */
+#define	PPP_ADDR_CISCO_UNICAST	0x0f	/* Cisco unicast address */
+/*
+ * XXX Note, this is overloaded with VINESCP, but we can tell based on
+ * XXX the address byte if we're using Cisco protocol numbers (i.e.
+ * XXX Ethertypes).
+ */
+#define	PPP_CISCO_KEEPALIVE 0x8035 /* Cisco keepalive protocol */
+
+static void ppp_netbsd_serial_if_read(u_char *pcap,
+			      const struct pcap_pkthdr *h, const u_char *p)
+{
+    int caplen = h->caplen;
+    int length = h->len;
+    u_short ptype;
+    u_char addr, ctrl;
+
+    packet_length = length;  /* save data link level packet length */
+    if (caplen < PPP_NETBSD_SERIAL_HDRLEN)
+	return;
+
+    addr = p[0];
+    ctrl = p[1];
+
+    switch (addr) {
+    case PPP_ADDR_ALLSTATIONS:
+	/*
+	 * Regular serial PPP packet.
+	 */
+	ptype = (p[2] << 8) | p[3];
+
+	p += PPP_NETBSD_SERIAL_HDRLEN;
+	length -= PPP_NETBSD_SERIAL_HDRLEN;
+	caplen -= PPP_NETBSD_SERIAL_HDRLEN;
+
+	switch (ptype) {
+	case PPP_IP:
+	    ip_read(p, length, caplen);
+	    break;
+#ifdef IPV6
+	case PPP_IPV6:
+	    ipv6_read(p, length, caplen);
+	    break;
+#endif
+	}
+	break;
+
+    case PPP_ADDR_CISCO_MULTICAST:
+    case PPP_ADDR_CISCO_UNICAST:
+	ptype = (p[2] << 8) | p[3];
+
+	p += PPP_NETBSD_SERIAL_HDRLEN;
+	length -= PPP_NETBSD_SERIAL_HDRLEN;
+	caplen -= PPP_NETBSD_SERIAL_HDRLEN;
+
+	switch (ptype) {
+	case PPP_CISCO_KEEPALIVE:
+	    break;
+	default:
+	    if (ether_encap_read(ptype, p, length, caplen) == 0) {
+		/* ether_type not known */
+	    }
+	}
+	break;
+
+    default:
+	/* Address not known, print raw packet. */
+	break;
+    }
+}
+#endif /* DLT_PPP_SERIAL */
+
+#ifndef NULL_HDRLEN
+#define	NULL_HDRLEN 4	/* DLT_NULL header length */
+#endif
 static void null_if_read(u_char *user, const struct pcap_pkthdr *h, const u_char *p)
 {
 	int length = h->len;
@@ -429,7 +615,66 @@ static void null_if_read(u_char *user, const struct pcap_pkthdr *h, const u_char
 	caplen -= NULL_HDRLEN;
 	ip = (struct ip *)(p + NULL_HDRLEN);
 
-	ip_read((const u_char *)ip, length, caplen);
+	switch (ip->ip_v) {
+	case 4:
+	    ip_read((const u_char *)ip, length, caplen);
+	    break;
+#ifdef IPV6
+	case 6:
+	    ipv6_read((const u_char *)ip, length, caplen);
+	    break;
+#endif
+	}
+}
+
+#ifndef PPPOE_HDRLEN
+#define PPPOE_HDRLEN	6
+#endif
+static int pppoe_read(const u_char *bp, const int length, const int caplen)
+{
+    u_short version, type, code, ptype;
+    const u_char *p;
+    int hdrlen;
+
+    if (caplen < PPPOE_HDRLEN)
+	return (0);
+
+    p = bp;
+    version = p[0] & 0xf0;
+    type    = p[0] & 0x0f;
+    code    = p[1];
+
+    if (version != 1 || type != 1 || code != 0)
+	return (0);
+
+    hdrlen = PPPOE_HDRLEN;
+    p += PPPOE_HDRLEN;
+
+    if (p[0] & 0x1) {
+	ptype = p[0];
+	hdrlen += 1;
+    }
+    else if (p[1] & 0x1) {
+	ptype = ntohs(*(u_short *)p);
+	hdrlen += 2;
+    }
+    else
+	return (0);
+
+    if (caplen < hdrlen)
+	return (0);
+
+    switch (ptype) {
+    case PPP_IP:
+	ip_read(bp + hdrlen, length - hdrlen, caplen - hdrlen);
+	break;
+#ifdef IPV6
+    case PPP_IPV6:
+	ipv6_read(bp + hdrlen, length - hdrlen, caplen - hdrlen);
+	break;
+#endif
+    }
+    return (1);
 }
 
 static int ip_read(const u_char *bp, const int length, const int caplen)
@@ -764,6 +1009,12 @@ static struct printer printers[] = {
 #endif
 	{ sl_if_print,	DLT_SLIP },
 	{ ppp_if_read,	DLT_PPP },
+#ifdef DLT_PPP_BSDOS
+	{ ppp_bsdos_if_read,  DLT_PPP_BSDOS },
+#endif
+#ifdef DLT_PPP_SERIAL	/* netbsd specific */
+	{ ppp_netbsd_serial_if_read,  DLT_PPP_SERIAL },
+#endif
 	{ null_if_read,	DLT_NULL },
 	{ NULL,			0 },
 };
@@ -798,11 +1049,7 @@ int open_pf(char *interface)
 	device = interface;
     printf("packet filter: using device %s\n", device);
     snaplen = DEFAULT_SNAPLEN;
-#ifdef USE_LARGEBUF
-    pd = pcap_open_live(device, snaplen, BPF_MAXBUFSIZE, 0, errbuf);
-#else
     pd = pcap_open_live(device, snaplen, 1, 0, errbuf);
-#endif
     if (pd == NULL)
 	fatal_error(errbuf);
     if (pcap_lookupnet(device, &localnet, &netmask, errbuf) < 0)

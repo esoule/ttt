@@ -15,7 +15,9 @@
 #set ttt_portno	6544
 ### set address
 #set ttt_viewaddr 224.6.6.6
-
+### set labels of graph axis
+#set ttt_x_label = "Time (sec)"
+#set ttt_y_label = "Traffic (Mbps)"
 #
 # set blt library path
 #
@@ -97,9 +99,11 @@ set num 0
 graph $graph -title "Protocol Breakdown" -bufferelements false -plotbackground gray90
 $graph xaxis configure \
 	-loose 1 \
-	-title "Time (sec)" 
+	-title $ttt_x_label 
 $graph yaxis configure \
-	-title "Traffic (Mbps)" 
+	-title $ttt_y_label
+# to disable auto scale, specify the range by "-min" and "-max" 
+# $graph yaxis configure -title $ttt_y_label -min 0 -max 5
 $graph legend configure \
 	-activerelief sunken \
 	-background ""
@@ -107,9 +111,11 @@ $graph legend configure \
 graph $graph2 -title "Host Breakdown" -bufferelements false -plotbackground gray90
 $graph2 xaxis configure \
 	-loose 1 \
-	-title "Time (sec)" 
+	-title $ttt_x_label
 $graph2 yaxis configure \
-	-title "Traffic (Mbps)" 
+	-title $ttt_y_label
+# to disable auto scale, specify the range by "-min" and "-max" 
+# $graph2 yaxis configure -title $ttt_y_label -min 0 -max 5
 $graph2 legend configure \
 	-activerelief sunken \
 	-background ""

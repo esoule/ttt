@@ -1,7 +1,7 @@
-/* $Id: ttt.c,v 0.7 1999/03/21 11:17:06 kjc Exp $ */
+/* $Id: ttt.c,v 0.8 2000/12/20 14:29:45 kjc Exp kjc $ */
 /*
- *  Copyright (c) 1996
- *	Sony Computer Science Laboratory Inc.  All rights reserved.
+ *  Copyright (c) 1996-2000
+ *	Sony Computer Science Laboratories, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms of parts of or the
  * whole original or derived work are permitted provided that the above
@@ -15,6 +15,7 @@
  */
 /* ttt.c -- ttt stand alone program main module */
 #include <sys/time.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,6 +30,7 @@ static void usage(void)
     printf("    [-interval ms]\n");
     printf("    [-dumpfile filename [-speed N]]\n");
     printf("    [-filter filter_value]\n");
+    printf("    [-yscale 'K'|'M'|n]\n");
     exit(1);
 }
 
@@ -47,6 +49,14 @@ void ttt_parseargs(int argc, char **argv)
 	    ttt_speed = atoi(argv[i]);
 	else if (strcmp(argv[i], "-filter") == 0 && ++i < argc)
 	    ttt_filter = strtol(argv[i], NULL, 0);
+	else if (strcmp(argv[i], "-yscale") == 0 && ++i < argc) {
+	    if (toupper(argv[i][0]) == 'K')
+		ttt_yscale = 1000;
+	    else if (toupper(argv[i][0]) == 'M')
+		ttt_yscale = 1000000;
+	    else
+		ttt_yscale = strtol(argv[i], NULL, 0);
+	}
 	else if (strcmp(argv[i], "-help") == 0 ||
 		 strcmp(argv[i], "--help") == 0 ||
 		 strcmp(argv[i], "-h") == 0)

@@ -15,10 +15,13 @@ ttt \- Tele Traffic Tapper
 ] [
 .B \-dumpfile
 .I file
-[
+] [
 .B \-speed
 .I factor
-] ]
+] ] [
+.B \-yscale
+.I 'K'|'M'|n
+]
 .br
 .SH DESCRIPTION
 .LP
@@ -66,6 +69,10 @@ Uses a dumpfile produced by \fItcpdump -w\fR as input.
 .B \-speed
 Specifies the acceleration factor of the replay speed.  
 \fI-speed 10\fR will replay a 10-minute-dumpfile in 1 minute.
+.TP
+.B \-yscale
+Specifies the scale of y axis.
+\fIK\fR and \fIM\fR represent 1000 and 1000000 respectively.
 
 .SH SEE ALSO
 tttprobe(1), tttview(1), pcap(3), BLT(n)

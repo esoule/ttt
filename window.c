@@ -1,7 +1,7 @@
-/* $Id: window.c,v 0.1 1996/06/30 12:52:56 kjc Exp $ */
+/* $Id: window.c,v 0.2 2000/12/20 14:29:45 kjc Exp kjc $ */
 /*
- *  Copyright (c) 1996
- *	Sony Computer Science Laboratory Inc.  All rights reserved.
+ *  Copyright (c) 1996-2000
+ *	Sony Computer Science Laboratories, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms of parts of or the
  * whole original or derived work are permitted provided that the above
@@ -103,7 +103,7 @@ int stat_ranking(long type, struct wg_entry **rank_list, int n)
 #ifdef PRINT_RANKING
 	printf("rank[%d]: [%16s] %.2fMbps\n",
 	       i, wgp->wg_name,
-	       (double)wg_getmaxsize(wgp)/(1024.0*1024.0));
+	       (double)wg_getmaxsize(wgp)/(1000.0*1000.0));
 #endif
     }
 #ifdef PRINT_RANKING
@@ -220,7 +220,7 @@ int wg_copybuf(struct wg_entry *wgp, double *vec, double interval, int n)
 
     for (i=0; i<n; i++) {
 	int bits = wgp->wg_ringbuf[index] * 8;
-	vec[i] = (double)bits / interval / (1024.0*1024.0);
+	vec[i] = (double)bits / interval / ttt_yscale;
 	if (++index == WG_WIN_SIZE)
 	    index = 0;
     }

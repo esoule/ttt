@@ -1,7 +1,7 @@
-/* $Id: tk_ttt.c,v 0.7 1999/03/21 11:17:06 kjc Exp $ */
+/* $Id: tk_ttt.c,v 0.8 2000/12/20 14:29:45 kjc Exp kjc $ */
 /*
- *  Copyright (c) 1996
- *	Sony Computer Science Laboratory Inc.  All rights reserved.
+ *  Copyright (c) 1996-2000
+ *	Sony Computer Science Laboratories, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms of parts of or the
  * whole original or derived work are permitted provided that the above
@@ -60,6 +60,16 @@ static int Ttt_Init(Tcl_Interp *interp)
 
     Tcl_CreateCommand(interp, "ttt", TttCmd,
 		      (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+
+    /* create labels of graph axis before reading ttt.tcl */
+    Tcl_SetVar(interp, "ttt_x_label", "Time (sec)", TCL_GLOBAL_ONLY);
+    if (ttt_yscale == 1000000)
+	sprintf(buf, "Traffic (Mbps)");
+    else if (ttt_yscale == 1000)
+	sprintf(buf, "Traffic (Kbps)");
+    else
+	sprintf(buf, "Traffic (bps/%d)", ttt_yscale);
+    Tcl_SetVar(interp, "ttt_y_label", buf, TCL_GLOBAL_ONLY);
 
     /* read ttt.tcl file: first try the current dir, then, install dir. */
     ttt_dir = getenv("TTT_LIBRARY");

@@ -1,7 +1,7 @@
-/* $Id: textview.c,v 0.2 1998/04/03 09:18:59 kjc Exp $ */
+/* $Id: textview.c,v 0.3 2000/12/20 14:29:45 kjc Exp kjc $ */
 /*
- *  Copyright (c) 1996
- *	Sony Computer Science Laboratory Inc.  All rights reserved.
+ *  Copyright (c) 1996-2000
+ *	Sony Computer Science Laboratories, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms of parts of or the
  * whole original or derived work are permitted provided that the above
