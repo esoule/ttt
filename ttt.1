@@ -21,6 +21,9 @@ ttt \- Tele Traffic Tapper
 ] ] [
 .B \-yscale
 .I 'K'|'M'|n
+] [
+.B \-pcap
+.I pcapfilters
 ]
 .br
 .SH DESCRIPTION
@@ -73,6 +76,9 @@ Specifies the acceleration factor of the replay speed.
 .B \-yscale
 Specifies the scale of y axis.
 \fIK\fR and \fIM\fR represent 1000 and 1000000 respectively.
+.TP
+.B \-pcap
+Specifies filters for \fIpcap\fR.
 
 .SH SEE ALSO
 tttprobe(1), tttview(1), pcap(3), BLT(n)

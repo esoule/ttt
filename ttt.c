@@ -1,4 +1,4 @@
-/* $Id: ttt.c,v 0.8 2000/12/20 14:29:45 kjc Exp kjc $ */
+/* $Id: ttt.c,v 0.9 2003/06/25 09:38:28 kjc Exp kjc $ */
 /*
  *  Copyright (c) 1996-2000
  *	Sony Computer Science Laboratories, Inc.  All rights reserved.
@@ -30,6 +30,7 @@ static void usage(void)
     printf("    [-interval ms]\n");
     printf("    [-dumpfile filename [-speed N]]\n");
     printf("    [-filter filter_value]\n");
+    printf("    [-pcap pcap_cmd]\n");
     printf("    [-yscale 'K'|'M'|n]\n");
     exit(1);
 }
@@ -49,6 +50,8 @@ void ttt_parseargs(int argc, char **argv)
 	    ttt_speed = atoi(argv[i]);
 	else if (strcmp(argv[i], "-filter") == 0 && ++i < argc)
 	    ttt_filter = strtol(argv[i], NULL, 0);
+	else if (strcmp(argv[i], "-pcap") == 0 && ++i < argc)
+	    ttt_pcapcmd = argv[i];
 	else if (strcmp(argv[i], "-yscale") == 0 && ++i < argc) {
 	    if (toupper(argv[i][0]) == 'K')
 		ttt_yscale = 1000;

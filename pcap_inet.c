@@ -1,4 +1,4 @@
-/* $Id: pcap_inet.c,v 0.4 1998/07/08 13:17:09 kjc Exp $ */
+/* $Id: pcap_inet.c,v 0.6 2003/10/16 11:00:23 kjc Exp kjc $ */
 /* completely derived from libpcap in order that viewers can be compiled
    without libpcap installed.  */
 /*
@@ -52,6 +52,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <pcap.h>
+
+#include "ttt.h"
 
 /* Not all systems have IFF_LOOPBACK */
 #ifdef IFF_LOOPBACK
@@ -115,7 +117,7 @@ pcap_lookupdev(errbuf)
 		 * SIOCGIFFLAGS stomps over it because the requests
 		 * are returned in a union.)
 		 */
-		strncpy(ifr.ifr_name, ifrp->ifr_name, sizeof(ifr.ifr_name));
+		strlcpy(ifr.ifr_name, ifrp->ifr_name, sizeof(ifr.ifr_name));
 		if (ioctl(fd, SIOCGIFFLAGS, (char *)&ifr) < 0) {
 			(void)sprintf(errbuf, "SIOCGIFFLAGS: %s",
 			    pcap_strerror(errno));
@@ -141,7 +143,7 @@ pcap_lookupdev(errbuf)
 		return (NULL);
 	}
 
-	(void)strncpy(device, mp->ifr_name, sizeof(device) - 1);
+	(void)strlcpy(device, mp->ifr_name, sizeof(device) - 1);
 	device[sizeof(device) - 1] = '\0';
 	return (device);
 }
@@ -161,7 +163,7 @@ pcap_lookupnet(device, netp, maskp, errbuf)
 		(void)sprintf(errbuf, "socket: %s", pcap_strerror(errno));
 		return (-1);
 	}
-	(void)strncpy(ifr.ifr_name, device, sizeof(ifr.ifr_name));
+	(void)strlcpy(ifr.ifr_name, device, sizeof(ifr.ifr_name));
 	if (ioctl(fd, SIOCGIFADDR, (char *)&ifr) < 0) {
 		(void)sprintf(errbuf, "SIOCGIFADDR: %s: %s",
 		    device, pcap_strerror(errno));

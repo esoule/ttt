@@ -1,4 +1,4 @@
-/* $Id: probe.c,v 0.2 2000/12/20 14:29:45 kjc Exp kjc $ */
+/* $Id: probe.c,v 0.3 2003/10/16 10:38:32 kjc Exp kjc $ */
 /*
  *  Copyright (c) 1996-2000
  *	Sony Computer Science Laboratories, Inc.  All rights reserved.
@@ -15,15 +15,20 @@
  */
 /* probe.c -- a probe program main module for remote-monitoring. */
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
 #include <signal.h>
 #include <netdb.h>
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "ttt.h"
 #include "ttt_node.h"
+#include "ttt_account.h"
 #include "ttt_remote.h"
 
 #include <pcap.h>
@@ -206,9 +211,11 @@ static int send_report(int sock_fd, int seq_no, struct timeval *tvp)
     char *cp;
     struct t_node *np;
     struct pcap_stat pc_stat;
+#if 0
     static int last_sent = 1;  /* how many records sent last time.
 				  initial value 1 is to send first packet */
-    
+#endif
+
     hdr = (struct ttt_hdr *)buffer;
     hdr->th_magic = htons(TTT_MAGIC);
     hdr->th_version = htons((TTT_MAJOR<<8) | TTT_MINOR);

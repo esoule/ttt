@@ -1,4 +1,4 @@
-/* $Id: tk_ttt.c,v 0.8 2000/12/20 14:29:45 kjc Exp kjc $ */
+/* $Id: tk_ttt.c,v 0.9 2003/10/16 10:38:32 kjc Exp kjc $ */
 /*
  *  Copyright (c) 1996-2000
  *	Sony Computer Science Laboratories, Inc.  All rights reserved.
@@ -17,6 +17,7 @@
    tttview but TTT_VIEW flag is set for tttview.*/
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -31,6 +32,9 @@
 #include <netdb.h>
 
 #include "ttt.h"
+#include "ttt_account.h"
+#include "ttt_window.h"
+#include "ttt_remote.h"
 #include "ttt_tk.h"
 
 Tcl_Interp *ttt_interp;		/* Interpreter for application. */
@@ -43,16 +47,16 @@ static Tk_TimerProc call_dumpread;
 
 void TttCleanup(void);
 static int TttCmd(ClientData clientData, Tcl_Interp *interp,
-		  int argc, char *argv[]);
+		  int argc, CONST84 char *argv[]);
 static int Ttt_Init(Tcl_Interp *interp);
 
 static int Ttt_Init(Tcl_Interp *interp)
 {
-    char *ttt_dir, *colors;
+    CONST84 char *ttt_dir, *colors;
 #ifdef TTT_VIEW
-    char *port_no;
+    CONST84 char *port_no;
 #else    
-    char *interval;
+    CONST84 char *interval;
 #endif
     char buf[128];
 
@@ -93,14 +97,14 @@ static int Ttt_Init(Tcl_Interp *interp)
     }
 
     /* get ttt variables */
-    if (colors = Tcl_GetVar(interp, "ttt_colors", TCL_LEAVE_ERR_MSG))
+    if ((colors = Tcl_GetVar(interp, "ttt_colors", TCL_LEAVE_ERR_MSG)) != NULL)
 	stat_set_colors(colors);
 
     if (Tcl_GetVar(interp, "ttt_nohostname", TCL_LEAVE_ERR_MSG) != NULL)
 	ttt_nohostname = 1;
 
 #ifdef TTT_VIEW
-    if (port_no = Tcl_GetVar(interp, "ttt_portno", TCL_LEAVE_ERR_MSG))
+    if ((port_no = Tcl_GetVar(interp, "ttt_portno", TCL_LEAVE_ERR_MSG)) != NULL)
 	ttt_portno = atoi(port_no);
     if (ttt_viewname == NULL)
 	ttt_viewname = Tcl_GetVar(interp, "ttt_viewname", TCL_LEAVE_ERR_MSG);
@@ -114,7 +118,7 @@ static int Ttt_Init(Tcl_Interp *interp)
 #else /* TTT */
     if (ttt_interface == NULL)
 	ttt_interface = Tcl_GetVar(interp, "ttt_interface", TCL_LEAVE_ERR_MSG);
-    if (interval = Tcl_GetVar(interp, "ttt_interval", TCL_LEAVE_ERR_MSG))
+    if ((interval = Tcl_GetVar(interp, "ttt_interval", TCL_LEAVE_ERR_MSG)) != NULL)
 	ttt_interval = atoi(interval);
 
     display_init();
@@ -196,8 +200,10 @@ void call_dumpread(ClientData client_data)
 #endif /* !TTT_VIEW */
 
 static int TttCmd(ClientData clientData, Tcl_Interp *interp,
-	   int argc, char *argv[])
+	   int argc, CONST84 char *argv[])
 {
+    static char buf[128];
+    
     if (argc == 1)
 	return TCL_OK;
 
@@ -209,18 +215,18 @@ static int TttCmd(ClientData clientData, Tcl_Interp *interp,
     else if (strcmp(argv[1], "set") == 0) {
 	if (strcmp(argv[2], "interval") == 0) {
 	    ttt_interval = atoi(argv[3]);
-	    interp->result = argv[3];
+	    strlcpy(buf, argv[3], sizeof(buf));
+	    interp->result = buf;
 	    return TCL_OK;
 	}
 	else if (strcmp(argv[2], "nohostname") == 0) {
 	    ttt_nohostname = atoi(argv[3]);
-	    interp->result = argv[3];
+	    strlcpy(buf, argv[3], sizeof(buf));
+	    interp->result = buf;
 	    return TCL_OK;
 	}
     }
     else if (strcmp(argv[1], "get") == 0) {
-	char buf[128];
-    
 	if (strcmp(argv[2], "interval") == 0) {
 	    sprintf(buf, "%d", ttt_interval);
 	    interp->result = buf;
@@ -298,10 +304,10 @@ int ttt_showmessage(char *string)
 int ttt_showstat(u_long recvpkts, u_long droppkts, u_long report_drop)
 {
     char buf[128];
-    static recved, dropped, report_dropped;
+    static u_long recved, dropped, report_dropped;
 
     if (recvpkts != recved) {
-	sprintf(buf, "set ttt_packets %d", recvpkts);
+	sprintf(buf, "set ttt_packets %lu", recvpkts);
 	if (Tcl_GlobalEval(ttt_interp, buf) != TCL_OK) {
 	    printf("showstat: %s\n", ttt_interp->result);
 	    return (-1);
@@ -309,7 +315,7 @@ int ttt_showstat(u_long recvpkts, u_long droppkts, u_long report_drop)
 	recved = recvpkts;
     }
     if (droppkts != dropped) {
-	sprintf(buf, "set ttt_drops %d", droppkts);
+	sprintf(buf, "set ttt_drops %lu", droppkts);
 	if (Tcl_GlobalEval(ttt_interp, buf) != TCL_OK) {
 	    printf("showstat: %s\n", ttt_interp->result);
 	    return (-1);
@@ -317,7 +323,7 @@ int ttt_showstat(u_long recvpkts, u_long droppkts, u_long report_drop)
 	dropped = droppkts;
     }
     if (report_drop != report_dropped) {
-	sprintf(buf, "set ttt_reportdrops %d", report_drop);
+	sprintf(buf, "set ttt_reportdrops %lu", report_drop);
 	if (Tcl_GlobalEval(ttt_interp, buf) != TCL_OK) {
 	    printf("showstat: %s\n", ttt_interp->result);
 	    return (-1);

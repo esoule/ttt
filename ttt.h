@@ -1,4 +1,4 @@
-/* $Id: ttt.h,v 0.10 2000/12/20 14:29:45 kjc Exp kjc $ */
+/* $Id: ttt.h,v 0.14 2003/10/16 11:00:23 kjc Exp kjc $ */
 /*
  *  Copyright (c) 1996-2000
  *	Sony Computer Science Laboratories, Inc.  All rights reserved.
@@ -20,8 +20,8 @@
 #include <sys/types.h>
 
 #define TTT_MAJOR	1
-#define TTT_MINOR	7
-#define TTT_VERSION	"1.7"
+#define TTT_MINOR	8
+#define TTT_VERSION	"1.8"
 
 /* default path for ttt.tcl */
 #ifndef TTT_LIBRARY
@@ -66,9 +66,9 @@
 /* globals */
 extern char *ttt_version;
 extern int ttt_interval;	/* graph update interval in ms */
-extern char *ttt_interface;	/* interface name for packet capture */
+extern const char *ttt_interface;	/* interface name for packet capture */
 extern int ttt_max_nodes;	/* limit of max nodes */
-extern char *ttt_viewname;	/* view address */
+extern const char *ttt_viewname;	/* view address */
 extern char *ttt_mcastif;	/* multicast interface address */
 extern int ttt_portno;		/* viewer's port number */
 extern int ttt_nohostname;	/* don't lookup host names */
@@ -76,9 +76,10 @@ extern int ttt_filter;		/* trace filter */
 extern char *ttt_dumpfile;	/* tcpdump file to replay */
 extern int ttt_speed;		/* replay speed */
 extern int ttt_yscale;		/* scale of y axis */
+extern char *ttt_pcapcmd;	/* pcap filter command */
 extern struct timeval ttt_dumptime;
 
-extern void fatal_error(/*const char *fmt, ...*/);
+extern void fatal_error(const char *fmt, ...);
 
 /* function prototypes */
 
@@ -95,9 +96,9 @@ extern void netname_init(unsigned long netaddr, unsigned long netmask);
 extern char *net_getname(long type, long *id);
 
 /* net_read.c */
-extern int open_pf(char *interface);
+extern int open_pf(const char *interface);
 extern void close_pf(void);
-extern int open_dump(char *file, char *interface);
+extern int open_dump(const char *file, const char *interface);
 extern int get_pcapstat(u_long *recvp, u_long *dropp, u_long *lostp);
 extern int dumpfile_read(void);
 
@@ -122,5 +123,9 @@ extern void ttt_textview(int seq_no);
 #define BYTE_ORDER LITTLE_ENDIAN
 #endif
 #endif /* BYTE_ORDER */
+
+#if !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__NetBSD__)
+#define strlcpy(d,s,z)	strncpy(d,s,z)
+#endif
 
 #endif /* _TTT_H_ */

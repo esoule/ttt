@@ -1,6 +1,6 @@
-/* $Id: net_read.c,v 0.13 2000/12/20 14:29:45 kjc Exp kjc $ */
+/* $Id: net_read.c,v 0.19 2003/10/16 11:55:00 kjc Exp kjc $ */
 /*
- *  Copyright (c) 1996-2000
+ *  Copyright (c) 1996-2003
  *	Sony Computer Science Laboratories, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms of parts of or the
@@ -50,12 +50,17 @@ char copyright[] =
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
 #include <sys/param.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
+#ifdef __OpenBSD__
+#include <net/if_pflog.h>
+#endif
 #include <netinet/in.h>
 #include <netinet/in_systm.h>
 #include <netinet/if_ether.h>
@@ -101,7 +106,6 @@ char copyright[] =
 
 char errbuf[PCAP_ERRBUF_SIZE];
 char *device;
-char *cmdbuf;
 pcap_t *pd;
 int pcapfd;
 
@@ -146,7 +150,7 @@ static void fddi_if_read(u_char *user, const struct pcap_pkthdr *h,
 			 const u_char *p);
 static void atm_if_read(u_char *user, const struct pcap_pkthdr *h,
 			const u_char *p);
-static void sl_if_read(u_char *user, const struct pcap_pkthdr *h,
+static void sl_if_print(u_char *user, const struct pcap_pkthdr *h,
 		       const u_char *p);
 static void ppp_if_read(u_char *user, const struct pcap_pkthdr *h,
 			const u_char *p);
@@ -164,8 +168,12 @@ static void ppp_netbsd_serial_if_read(u_char *user,
 #endif
 static void null_if_read(u_char *user, const struct pcap_pkthdr *h,
 			 const u_char *p);
-static int ether_encap_read(const u_short ethtype, const u_char *p,
-			    const int length, const int caplen);
+#ifdef PFLOG_HDRLEN
+static void pflog_if_read(u_char *user, const struct pcap_pkthdr *h,
+			  const u_char *p);
+#endif
+static int ether_encap_read(u_short ethtype, const u_char *p,
+			    int length, int caplen);
 static int llc_read(const u_char *p, const int length, const int caplen);
 static int pppoe_read(const u_char *bp, const int length, const int caplen);
 static int ip_read(const u_char *bp, const int length, const int caplen);
@@ -215,7 +223,12 @@ int dumpfile_read(void)
 static void ttt_dumpreader(u_char *user, const struct pcap_pkthdr *h,
 			   const u_char *p) 
 {
-    ttt_dumptime = h->ts;
+#ifndef __OpenBSD__
+    ttt_dumptime.tv_sec = h->ts.tv_sec;
+    ttt_dumptime.tv_usec = h->ts.tv_usec;
+#else
+    ttt_dumptime = *((struct timeval *)&h->ts);
+#endif
 
     (*ttt_netreader)(user, h, p);
 }
@@ -249,8 +262,8 @@ static void ether_if_read(u_char *user, const struct pcap_pkthdr *h,
     }
 }
 
-static int ether_encap_read(const u_short ethtype, const u_char *p,
-			    const int length, const int caplen)
+static int ether_encap_read(u_short ethtype, const u_char *p,
+			    int length, int caplen)
 {
 #if 0
     /* people love to see the total traffic! */
@@ -258,7 +271,9 @@ static int ether_encap_read(const u_short ethtype, const u_char *p,
 #endif
 	eth_addsize(ethtype, packet_length);
 
+#ifdef ETHERTYPE_VLAN
  recurse:
+#endif
     switch (ethtype) {
     case ETHERTYPE_IP:
 	ip_read(p, length, caplen);
@@ -268,8 +283,8 @@ static int ether_encap_read(const u_short ethtype, const u_char *p,
 	ipv6_read(p, length, caplen);
 	break;
 #endif
-#ifdef ETHERTYPE_8021Q
-	case ETHERTYPE_8021Q:
+#ifdef ETHERTYPE_VLAN
+	case ETHERTYPE_VLAN:
 		ethtype = ntohs(*(unsigned short*)(p+2));
 		p += 4;
 		length -= 4;
@@ -333,7 +348,7 @@ static int llc_read(const u_char *p, const int length, const int caplen)
     }
 
     /* Watch out for possible alignment problems */
-    bcopy((char *)p, (char *)&llc, min(caplen, sizeof(llc)));
+    memcpy((char *)&llc, (char *)p, min(caplen, sizeof(llc)));
 
 #if 0  /* we are not interested in these */
     if (llc.ssap == LLCSAP_GLOBAL && llc.dsap == LLCSAP_GLOBAL) {
@@ -359,7 +374,7 @@ static int llc_read(const u_char *p, const int length, const int caplen)
 #ifdef ALIGN_WORD
     {
 	u_short tmp;
-	bcopy(&llc.ethertype[0], &tmp, sizeof(u_short));
+	memcpy(&tmp, &llc.ethertype[0], sizeof(u_short));
 	et = ntohs(tmp);
     }
 #else
@@ -649,6 +664,40 @@ static void raw_if_read(u_char *pcap, const struct pcap_pkthdr *h, const u_char 
 }
 #endif
 
+#ifdef PFLOG_HDRLEN
+
+static void
+pflog_if_read(u_char *user, const struct pcap_pkthdr *h, const u_char *p)
+{
+	int caplen = h->caplen;
+	int length = h->len;
+	const struct pfloghdr *pf;
+
+	if (caplen < PFLOG_HDRLEN) {
+		return;
+	}
+
+	pf = (struct pfloghdr *)p;
+	p += PFLOG_HDRLEN;
+	length -= PFLOG_HDRLEN;
+	caplen -= PFLOG_HDRLEN;
+	packet_length = length;  /* save packet length */
+
+	switch (ntohl(pf->af)) {
+	case AF_INET:
+		ip_read((const u_char *)p, length, caplen);
+		break;
+#ifdef INET6
+	case AF_INET6:
+		ip6_read((const u_char *)p, length, caplen);
+		break;
+#endif
+	}
+}
+
+#endif /* PFLOG_HDRLEN */
+
+
 #ifndef PPPOE_HDRLEN
 #define PPPOE_HDRLEN	6
 #endif
@@ -722,7 +771,7 @@ static int ip_read(const u_char *bp, const int length, const int caplen)
 
 	if (abuf == 0)
 	    abuf = (u_char *)malloc(DEFAULT_SNAPLEN);
-	bcopy((char *)ip, (char *)abuf, caplen);
+	memcpy((char *)abuf, (char *)ip, caplen);
 	ip = (struct ip *)abuf;
     }
 #endif /* ALIGN_WORD */
@@ -924,7 +973,7 @@ static int ipv6_read(const u_char *bp, const int length, const int caplen)
 
 	if (abuf == 0)
 	    abuf = (u_char *)malloc(DEFAULT_SNAPLEN);
-	bcopy((char *)ipv6, (char *)abuf, caplen);
+	memcpy((char *)abuf, (char *)ipv6, caplen);
 	ipv6 = (struct ipv6 *)abuf;
     }
 #endif /* ALIGN_WORD */
@@ -935,13 +984,13 @@ static int ipv6_read(const u_char *bp, const int length, const int caplen)
 	return 0;
     bp = (u_char *)ipv6 + hlen;
 
-    bcopy(&ipv6->ipv6_src, srcaddr, sizeof(struct in6_addr));
+    memcpy(srcaddr, &ipv6->ipv6_src, sizeof(struct in6_addr));
     srcaddr[0] = ntohl(srcaddr[0]);
     srcaddr[1] = ntohl(srcaddr[1]);
     srcaddr[2] = ntohl(srcaddr[2]);
     srcaddr[3] = ntohl(srcaddr[3]);
 
-    bcopy(&ipv6->ipv6_dst, dstaddr, sizeof(struct in6_addr));
+    memcpy(dstaddr, &ipv6->ipv6_dst, sizeof(struct in6_addr));
     dstaddr[0] = ntohl(dstaddr[0]);
     dstaddr[1] = ntohl(dstaddr[1]);
     dstaddr[2] = ntohl(dstaddr[2]);
@@ -950,7 +999,7 @@ static int ipv6_read(const u_char *bp, const int length, const int caplen)
     if (!(ttt_filter & TTTFILTER_SRCHOST)) {
 	hostv6_addsize(srcaddr, packet_length);
 	if (!(ttt_filter & TTTFILTER_DSTHOST)
-	    && bcmp(srcaddr, dstaddr, sizeof(srcaddr)))
+	    && memcmp(srcaddr, dstaddr, sizeof(srcaddr)))
 	    hostv6_addsize(dstaddr, packet_length);
     }
     else if (!(ttt_filter & TTTFILTER_DSTHOST))
@@ -1042,6 +1091,9 @@ static struct printer printers[] = {
 #ifdef DLT_RAW
 	{ raw_if_read,  DLT_RAW },
 #endif
+#ifdef PFLOG_HDRLEN
+	{ pflog_if_read,	DLT_PFLOG },
+#endif
 	{ NULL,			0 },
 };
 
@@ -1059,25 +1111,29 @@ lookup_printer(int type)
 	return NULL;
 }
 
-int open_pf(char *interface)
+int open_pf(const char *interface)
 {
     int snaplen, fd;
     struct bpf_program fcode;
     u_int localnet, netmask;
     struct in_addr inaddr;
+    char buf[128];
 
     if (interface == NULL) {
 	device = pcap_lookupdev(errbuf);
 	if (device == NULL)
 	    fatal_error(errbuf);
     }
-    else
-	device = interface;
+    else {
+	strlcpy(buf, interface, sizeof(buf));
+	device = buf;
+    }
     printf("packet filter: using device %s\n", device);
     snaplen = DEFAULT_SNAPLEN;
     pd = pcap_open_live(device, snaplen, 1, 0, errbuf);
     if (pd == NULL)
 	fatal_error(errbuf);
+
     if (pcap_lookupnet(device, &localnet, &netmask, errbuf) < 0)
 	fatal_error(errbuf);
     netname_init(localnet, netmask);
@@ -1085,18 +1141,16 @@ int open_pf(char *interface)
     printf("local network is %s", inet_ntoa(inaddr));
     inaddr.s_addr = netmask;
     printf(" netmask is %s\n", inet_ntoa(inaddr));
+
+    if (pcap_compile(pd, &fcode, ttt_pcapcmd, 1, netmask) < 0)
+	fatal_error(pcap_geterr(pd));
+    if (pcap_setfilter(pd, &fcode) < 0)
+	fatal_error(pcap_geterr(pd));
+
     /*
      * Let user own process after socket has been opened.
      */
     setuid(getuid());
-
-#ifdef notyet  /* bpfcode not yet supported */
-    if (pcap_compile(pd, &fcode, cmdbuf, 1, localnetmask.s_addr) < 0)
-	fatal_error(pcap_geterr(pd));
-
-    if (pcap_setfilter(pd, &fcode) < 0)
-	fatal_error(pcap_geterr(pd));
-#endif /* noyet */
 
     ttt_netreader = lookup_printer(pcap_datalink(pd));
 
@@ -1122,15 +1176,16 @@ void close_pf(void)
     pcap_close(pd);
 }
 
-int open_dump(char *file, char *interface)
+int open_dump(const char *file, const char *interface)
 {
     int fd;
     struct bpf_program fcode;
     u_int localnet, netmask;
     struct in_addr inaddr;
+    char buf[128];
 
     printf("packet filter: using dump file %s\n", file);
-    pd = pcap_open_offline(file, errbuf);
+    pd = pcap_open_offline((char *)file, errbuf);
     if (pd == NULL)
 	fatal_error(errbuf);
 
@@ -1140,8 +1195,10 @@ int open_dump(char *file, char *interface)
     if (interface == NULL) {
 	device = pcap_lookupdev(errbuf);
     }
-    else
-	device = interface;
+    else {
+	strlcpy(buf, interface, sizeof(buf));
+	device = buf;
+    }
     if (device != NULL)
 	(void)pcap_lookupnet(device, &localnet, &netmask, errbuf);
 
@@ -1151,13 +1208,10 @@ int open_dump(char *file, char *interface)
     inaddr.s_addr = netmask;
     printf(" netmask is %s\n", inet_ntoa(inaddr));
 
-#ifdef notyet  /* bpfcode not yet supported */
-    if (pcap_compile(pd, &fcode, cmdbuf, 1, localnetmask.s_addr) < 0)
+    if (pcap_compile(pd, &fcode, ttt_pcapcmd, 1, netmask) < 0)
 	fatal_error(pcap_geterr(pd));
-
     if (pcap_setfilter(pd, &fcode) < 0)
 	fatal_error(pcap_geterr(pd));
-#endif /* noyet */
 
     ttt_netreader = lookup_printer(pcap_datalink(pd));
 

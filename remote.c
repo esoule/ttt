@@ -1,4 +1,4 @@
-/* $Id: remote.c,v 0.3 2000/12/20 14:29:45 kjc Exp kjc $ */
+/* $Id: remote.c,v 0.4 2003/10/16 10:38:32 kjc Exp kjc $ */
 /*
  *  Copyright (c) 1996-2000
  *	Sony Computer Science Laboratories, Inc.  All rights reserved.
@@ -15,11 +15,13 @@
  */
 /* remote.c -- a module common for remote-monitoring */
 #include <stdio.h>
+#include <string.h>
 #include <netdb.h>
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "ttt.h"
 #include "ttt_remote.h"
@@ -30,13 +32,13 @@ int name2sockaddrin(char *name, int port, struct sockaddr_in *addrp)
     unsigned long inaddr;
     struct hostent *hep;
 
-    bzero(addrp, sizeof(struct sockaddr_in));
+    memset(addrp, 0, sizeof(struct sockaddr_in));
     addrp->sin_family = PF_INET;
     if (name != NULL) {
 	if ((inaddr = inet_addr(name)) != -1)
-	    bcopy(&inaddr, &addrp->sin_addr, sizeof(inaddr));
+	    memcpy(&addrp->sin_addr, &inaddr, sizeof(inaddr));
 	else if ((hep = gethostbyname(name)) != NULL)
-	    bcopy(hep->h_addr, &addrp->sin_addr, hep->h_length);
+	    memcpy(&addrp->sin_addr, hep->h_addr, hep->h_length);
 	else
 	    return (-1);
     }

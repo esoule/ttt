@@ -1,4 +1,4 @@
-/* $Id: node.c,v 0.2 2000/12/20 14:29:45 kjc Exp kjc $ */
+/* $Id: node.c,v 0.4 2003/10/16 12:09:19 kjc Exp kjc $ */
 /*
  *  Copyright (c) 1996-2000
  *	Sony Computer Science Laboratories, Inc.  All rights reserved.
@@ -43,6 +43,7 @@
 */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 
 #include "ttt.h"
@@ -416,7 +417,7 @@ static int b_alloc_nodes(int tab_no, int n)
     for (i=0; i<n; i++) {
 	if ((np = malloc(sizeof(struct t_node))) == NULL)
 	    fatal_error("b_allocate: can't get memory");
-	bzero(np, sizeof(struct t_node));
+	memset(np, 0, sizeof(struct t_node));
 	np->t_type = (tab_no == 0) ? TTTTYPE_PROTO : TTTTYPE_HOST;
 	B_INSFREEQ(tab_no, np);
     }
@@ -660,6 +661,7 @@ static int node_comp_id(long *a, long *b)
 }
 
 #ifdef NODE_DEBUG
+
 static void dumptree(struct t_node *root)
 {
     struct t_node *np = root;

@@ -1,4 +1,4 @@
-/* $Id: net_names.c,v 0.6 2000/12/20 14:29:45 kjc Exp kjc $ */
+/* $Id: net_names.c,v 0.8 2003/10/16 11:55:00 kjc Exp kjc $ */
 /*
  *  Copyright (c) 1996-2000
  *	Sony Computer Science Laboratories, Inc.  All rights reserved.
@@ -56,7 +56,9 @@ static u_long f_localnet, f_netmask;
 static char *tcpport_string(u_short port);
 static char *udpport_string(register u_short port);
 static void init_servarray(void);
+#ifdef INIT_HOSTNAME_TAB
 static void init_hostarray(void);
+#endif
 static char *getname(const u_long addr);
 static char *intoa(u_long addr);
 
@@ -89,16 +91,16 @@ struct pname_tab {
 
 static struct pname_tab eth_tab[] = 
 {
-    "ip",	ETHERTYPE_IP,			/* IP protocol */
-    "arp",	ETHERTYPE_ARP,			/* Addr. resolution protocol */
+    { "ip",	ETHERTYPE_IP },			/* IP protocol */
+    { "arp",	ETHERTYPE_ARP },		/* Addr. resolution protocol */
 #ifdef IPV6
-    "ipv6",	ETHERTYPE_IPV6,			/* IPv6 protocol */
+    { "ipv6",	ETHERTYPE_IPV6 },		/* IPv6 protocol */
 #endif
-    "pup",	ETHERTYPE_PUP,			/* PUP protocol */
-    "revarp",	ETHERTYPE_REVARP,		/* Reverse ARP */
-    "loop",	ETHERTYPE_LOOPBACK,		/* Loopback */
-    "atalk",	ETHERTYPE_ATALK,		/* AppleTalk */
-    NULL,	0
+    { "pup",	ETHERTYPE_PUP },		/* PUP protocol */
+    { "revarp",	ETHERTYPE_REVARP },		/* Reverse ARP */
+    { "loop",	ETHERTYPE_LOOPBACK },		/* Loopback */
+    { "atalk",	ETHERTYPE_ATALK },		/* AppleTalk */
+    { NULL,	0 }
 };
 
 /* stick to RFC1700.  some systems has wrong numbers.  */
@@ -125,26 +127,26 @@ static struct pname_tab eth_tab[] =
 
 static struct pname_tab ip_tab[] =
 {
-    "tcp",	IPPROTO_TCP,		/* tcp */
-    "udp",	IPPROTO_UDP,		/* user datagram protocol */
-    "icmp",	IPPROTO_ICMP,		/* control message protocol */
-    "igmp",	IPPROTO_IGMP,		/* group control protocol */
+    { "tcp",	IPPROTO_TCP },		/* tcp */
+    { "udp",	IPPROTO_UDP },		/* user datagram protocol */
+    { "icmp",	IPPROTO_ICMP },		/* control message protocol */
+    { "igmp",	IPPROTO_IGMP },		/* group control protocol */
 #ifdef IPPROTO_GGP
-    "ggp",	IPPROTO_GGP, 		/* gateway^2 (deprecated) */
+    { "ggp",	IPPROTO_GGP }, 		/* gateway^2 (deprecated) */
 #endif
-    "egp",	IPPROTO_EGP,		/* exterior gateway protocol */
-    "pup",	IPPROTO_PUP,		/* pup */
-    "ospf",	IPPROTO_OSPFIGP,	/* OSPFIGP */
-    "rsvp",	IPPROTO_RSVP,		/* RSVP */
-    "gre",	IPPROTO_GRE,		/* GRE */
-    "esp",	IPPROTO_ESP,		/* encapsulating security payload */
-    "ip", 	IPPROTO_IP,		/* IP in IP */
-    "ipip", 	IPPROTO_IPIP,		/* IP-within-IP */
-    "encap",	IPPROTO_ENCAP,		/* Encapsulation Header */
+    { "egp",	IPPROTO_EGP },		/* exterior gateway protocol */
+    { "pup",	IPPROTO_PUP },		/* pup */
+    { "ospf",	IPPROTO_OSPFIGP },	/* OSPFIGP */
+    { "rsvp",	IPPROTO_RSVP },		/* RSVP */
+    { "gre",	IPPROTO_GRE },		/* GRE */
+    { "esp",	IPPROTO_ESP },		/* encapsulating security payload */
+    { "ip", 	IPPROTO_IP },		/* IP in IP */
+    { "ipip", 	IPPROTO_IPIP },		/* IP-within-IP */
+    { "encap",	IPPROTO_ENCAP },	/* Encapsulation Header */
 #ifdef IPV6
-    "icmp6",	IPPROTO_ICMPV6,		/* ICMP version 6 */
+    { "icmp6",	IPPROTO_ICMPV6 },	/* ICMP version 6 */
 #endif
-    NULL,	0
+    { NULL,	0 }
 };
 
 static char *pname_lookup(struct pname_tab *tab, long id)
@@ -171,7 +173,7 @@ char *net_getname(long type, long *id)
 	if (name != NULL)
 	    sprintf(buf, "%s/ether", name);
 	else
-	    sprintf(buf, "0x%x/ether", id[0]);
+	    sprintf(buf, "0x%lx/ether", id[0]);
 	break;
     case TTTTYPE_IP:
 	if ((buf = malloc(sizeof("encap/ip  "))) == NULL)
@@ -180,7 +182,7 @@ char *net_getname(long type, long *id)
 	if (name != NULL)
 	    sprintf(buf, "%s/ip", name);
 	else
-	    sprintf(buf, "%d/ip", id[0]);
+	    sprintf(buf, "%lu/ip", id[0]);
 	break;
     case TTTTYPE_UDP:
 	if ((buf = malloc(sizeof("some-long-service-name/udp"))) == NULL)
@@ -189,7 +191,7 @@ char *net_getname(long type, long *id)
 	if ((name = udpport_string(portno)) != NULL)
 	    sprintf(buf, "%s/udp", name);
 	else
-	    sprintf(buf, "%d/udp", id[0]);
+	    sprintf(buf, "%lu/udp", id[0]);
 	break;
     case TTTTYPE_TCP:
 	if ((buf = malloc(sizeof("some-long-service-name/tcp"))) == NULL)
@@ -198,7 +200,7 @@ char *net_getname(long type, long *id)
 	if ((name = tcpport_string(portno)) != NULL)
 	    sprintf(buf, "%s/tcp", name);
 	else
-	    sprintf(buf, "%d/tcp", id[0]);
+	    sprintf(buf, "%lu/tcp", id[0]);
 	break;
     case TTTTYPE_IPHOST:
     {
@@ -235,7 +237,7 @@ char *net_getname(long type, long *id)
 	if (name != NULL)
 	    sprintf(buf, "%s/ip6", name);
 	else
-	    sprintf(buf, "%d/ip6", id[0]);
+	    sprintf(buf, "%lu/ip6", id[0]);
 	break;
     case TTTTYPE_UDPV6:
 	if ((buf = malloc(sizeof("some-long-service-name/udp6"))) == NULL)
@@ -244,7 +246,7 @@ char *net_getname(long type, long *id)
 	if ((name = udpport_string(portno)) != NULL)
 	    sprintf(buf, "%s/udp6", name);
 	else
-	    sprintf(buf, "%d/udp6", id[0]);
+	    sprintf(buf, "%lu/udp6", id[0]);
 	break;
     case TTTTYPE_TCPV6:
 	if ((buf = malloc(sizeof("some-long-service-name/tcp6"))) == NULL)
@@ -253,7 +255,7 @@ char *net_getname(long type, long *id)
 	if ((name = tcpport_string(portno)) != NULL)
 	    sprintf(buf, "%s/tcp6", name);
 	else
-	    sprintf(buf, "%d/tcp6", id[0]);
+	    sprintf(buf, "%lu/tcp6", id[0]);
 	break;
     case TTTTYPE_IPV6HOST:
     {
@@ -401,7 +403,7 @@ static void init_hostarray(void)
 	u_int32 addr;
 	if (hp->h_length != 4)
 	    continue;
-	bcopy(hp->h_addr, &addr, hp->h_length);
+	memcpy(&addr, hp->h_addr, hp->h_length);
 	addr = ntohl(addr);
 	p = &hnametable[addr & (HASHNAMESIZE-1)];
 

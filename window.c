@@ -1,4 +1,4 @@
-/* $Id: window.c,v 0.2 2000/12/20 14:29:45 kjc Exp kjc $ */
+/* $Id: window.c,v 0.3 2003/10/16 10:38:32 kjc Exp kjc $ */
 /*
  *  Copyright (c) 1996-2000
  *	Sony Computer Science Laboratories, Inc.  All rights reserved.
@@ -23,6 +23,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -125,7 +126,7 @@ static int color_index = 0;
 
 #define MAX_COLORS 64
 
-int stat_set_colors(char *string)
+int stat_set_colors(const char *string)
 {
     char *cp;
     int i, done = 0;
@@ -291,7 +292,7 @@ static struct wg_entry *wg_create(long type, long *id)
     if (wgp->wg_ringbuf == NULL)
 	fatal_error("wg_create: no memory!");
 
-    bzero(wgp->wg_ringbuf, WG_WIN_SIZE*sizeof(int));
+    memset(wgp->wg_ringbuf, 0, WG_WIN_SIZE*sizeof(int));
 
     wgp->wg_type = type;
     wgp->wg_id[0] = id[0];
@@ -516,7 +517,7 @@ static void w_alloc_entries(int n)
     for (i=0; i<n; i++) {
 	if ((ep = malloc(sizeof(struct w_ent))) == NULL)
 	    fatal_error("w_alloc_entries: can't get memory");
-	bzero(ep, sizeof(struct w_ent));
+	memset(ep, 0, sizeof(struct w_ent));
 	w_insq(&free_list, ep);
     }
     w_ent_allocated += n;

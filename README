@@ -1,7 +1,7 @@
 
-	TTT: Tele Traffic Tapper (version 1.7)
+	TTT: Tele Traffic Tapper (version 1.8)
 
-					2002/10/22
+					2003/10/16
 
 ttt is yet another descendant of tcpdump but it is capable of real-time,
 graphical, and remote traffic-monitoring.  ttt won't replace tcpdump,
@@ -89,7 +89,7 @@ Installing TTT:
     Getting the source code:
 	http://www.csl.sony.co.jp/person/kjc/software.html
 	  or
-	ftp://ftp.csl.sony.co.jp/pub/kjc/ttt-1.6.tar.gz
+	ftp://ftp.csl.sony.co.jp/pub/kjc/ttt-1.8.tar.gz
 
     First, you have to install "libpcap" and "libBLT (2.4 recommended)"
     (and, of course, Tcl/Tk).  Those are placed in the ttt distribution 
@@ -99,19 +99,21 @@ Installing TTT:
 
 	http://www.tcltk.com/blt/
 
-    I myself is currently using libpcap-0.7.1 and blt2.4u with Tcl8.3
-    and Tk8.3 on FreeBSD-4.7.
+    I myself is currently using libpcap-0.7.1 and blt2.4z with Tcl8.4
+    and Tk8.4 on FreeBSD-4.8.
 
     libpcap is available for most platforms.  (it comes with tcpdump.)
 
-    <README of the BLT2.4u says:>
-	This release has been compiled and tested with versions:
+    <README of the BLT2.4z says:>
+	This release has been built and tested with the following Tcl/Tk
+	versions:
 	Tcl 7.5 / Tk 4.1
 	Tcl 7.6 / Tk 4.2
-	Tcl/Tk 8.0.2 thru 8.0.5
-	Tcl/Tk 8.1.0 thru 8.1.1
-	Tcl/Tk 8.2.0 thru 8.2.3 
-	Tcl/Tk 8.3.0 thru 8.3.1
+	Tcl/Tk 8.0
+	Tcl/Tk 8.1
+	Tcl/Tk 8.2
+	Tcl/Tk 8.3 
+        Tcl/Tk 8.4 thru 8.4.0
 
 Building TTT:
    
@@ -166,8 +168,6 @@ Running TTT:
 	instead.
 
 Command Line Options:
-	(I haven't made man pages yet.  So I include the brief
-	explanations here.)
 
   ttt [options]
     possible options are:	
@@ -381,8 +381,25 @@ Send bug reports, suggestions, etc. to
 
 
 CHANGES:
-02/10/22	set "-D_BSD_SOURCE" for linux, which eliminates the use
-		of tcpdump headers.
+2003/10/16	version 1.8
+2003/09/30	configure.in, Makefile.in:
+		tttprobe doesn't need blt/tcl/tk/x11 libraries.
+		add -Wall to CFLAGS.
+
+		ttt.h,ttt_tk.h,tk_ttt.c,common.c,net_read.c:
+		supress compiler warnings for discarding const qualifiers.
+
+2003/06/25	ttt.h,common.c,relay.c:
+		convert varargs into stdarg.
+		pointed out by "Stefan Winter" <Stefan.Winter@sandstein.de>
+
+2003/02/24	need to call pcap_compile() and pcap_setfilter() to set
+		the snap length since bpf implements the snaplen by bpf code.
+		add [-pcap cmd] option as a by-product.
+
+02/10/23	version 1.7
+02/10/22	make configure set "-D_BSD_SOURCE" for linux, which
+		eliminates the use of tcpdump headers.
 
 01/12/15	net_read.c: add DLT_RAW support
 		submitted by Jean-Daniel PAUGET <jd@disjunkt.com>

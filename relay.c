@@ -1,4 +1,4 @@
-/* $Id: relay.c,v 0.4 2000/12/20 14:29:45 kjc Exp kjc $ */
+/* $Id: relay.c,v 0.6 2003/10/16 10:38:32 kjc Exp kjc $ */
 /*
  *  Copyright (c) 1996-2000
  *	Sony Computer Science Laboratories, Inc.  All rights reserved.
@@ -17,7 +17,12 @@
 /* a standalone tool to relay ttt packets */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <string.h>
 #include <signal.h>
+#include <errno.h>
+#include <stdarg.h>
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -45,12 +50,14 @@ union sockunion {
 #define BUFFER_SIZE	4096	/* big enough */
 static char buffer[BUFFER_SIZE];
 
+void fatal_error(const char *fmt, ...);
+
 int name2sockaddr(char *name, int port, union sockunion *addrp, int family)
 {
     unsigned long inaddr;
     struct hostent *hep;
 
-    bzero(addrp, sizeof(union sockunion));
+    memset(addrp, 0, sizeof(union sockunion));
 #ifdef INET6
     {
 	struct addrinfo hints, *res;
@@ -79,9 +86,9 @@ int name2sockaddr(char *name, int port, union sockunion *addrp, int family)
     addrp->su_sin.sin_len = sizeof(struct sockaddr_in);
     if (name != NULL) {
 	if ((inaddr = inet_addr(name)) != -1)
-	    bcopy(&inaddr, &addrp->su_sin.sin_addr, sizeof(inaddr));
+	    memcpy(&addrp->su_sin.sin_addr, &inaddr, sizeof(inaddr));
 	else if ((hep = gethostbyname(name)) != NULL)
-	    bcopy(hep->h_addr, &addrp->su_sin.sin_addr, hep->h_length);
+	    memcpy(&addrp->su_sin.sin_addr, hep->h_addr, hep->h_length);
 	else
 	    return (-1);
     }
@@ -125,7 +132,7 @@ int main(argc, argv)
     int in_family = AF_UNSPEC;
     int out_family = AF_UNSPEC;
     int packets = 0;
-    const char *ptr;
+    const char *ptr = NULL;
 #ifdef INET6
     char str[INET6_ADDRSTRLEN];
 #else
@@ -285,7 +292,7 @@ int main(argc, argv)
 	printf("reading from [%s] ....\n", probe_name);
     }
     else
-	bzero(&probe_addr, sizeof(probe_addr));
+	memset(&probe_addr, 0, sizeof(probe_addr));
 	
     while (1) {
 	int nbytes, fromlen;
@@ -367,20 +374,18 @@ int main(argc, argv)
 }
 
 #include <errno.h>
-#include <varargs.h>
+#include <stdarg.h>
 
-fatal_error(va_alist)
-    va_dcl
+void
+fatal_error(const char *fmt, ...)
 {
     va_list ap;
-    char *fmt;
 
     if (errno != 0)
 	perror("fatal_error");
     else
 	fprintf(stderr, "fatal_error: ");
-    va_start(ap);
-    fmt = va_arg(ap, char *);
+    va_start(ap, fmt);
     vfprintf(stderr, fmt, ap);
     va_end(ap);
     fprintf(stderr, "\n");

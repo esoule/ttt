@@ -1,4 +1,4 @@
-/* $Id: ttt_account.h,v 0.1 1996/06/30 12:52:32 kjc Exp $ */
+/* $Id: ttt_account.h,v 0.1 1996/06/30 12:52:32 kjc Exp kjc $ */
 #ifndef _TTT_ACCOUNT_H_
 #define _TTT_ACCOUNT_H_
 

@@ -1,4 +1,4 @@
-/* $Id: common.c,v 0.5 2000/12/20 14:29:45 kjc Exp kjc $ */
+/* $Id: common.c,v 0.8 2003/10/16 11:55:00 kjc Exp kjc $ */
 /*
  *  Copyright (c) 1996-2000
  *	Sony Computer Science Laboratories, Inc.  All rights reserved.
@@ -18,6 +18,10 @@
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <stdarg.h>
 
 #include "ttt.h"
 
@@ -33,31 +37,25 @@ int ttt_nohostname = 0;		/* don't lookup host names */
 int ttt_filter = 0;		/* trace filter */
 
 /* only used at startup */
-char *ttt_interface = NULL;	/* interface name for packet capturing */
+const char *ttt_interface = NULL;  /* interface name for packet capturing */
 char *ttt_dumpfile = NULL;	/* tcpdump file to replay */
 int ttt_speed = 1;		/* replay speed */
 struct timeval ttt_dumptime;
-char *ttt_viewname = NULL;
+const char *ttt_viewname = NULL;
 char *ttt_mcastif = NULL;
 int ttt_portno = TTT_PORT;	/* receiver's port number */
 int ttt_yscale = 1000000;	/* scale of y axis (Mbps by default) */
+char *ttt_pcapcmd = NULL;	/* pcap filter command */
 
-#include <stdio.h>
-#include <errno.h>
-#include <varargs.h>
-
-void fatal_error(va_alist)
-    va_dcl
+void fatal_error(const char *fmt, ...)
 {
     va_list ap;
-    char *fmt;
 
     if (errno != 0)
 	perror("fatal_error");
     else
 	fprintf(stderr, "fatal_error: ");
-    va_start(ap);
-    fmt = va_arg(ap, char *);
+    va_start(ap, fmt);
     vfprintf(stderr, fmt, ap);
     va_end(ap);
     fprintf(stderr, "\n");

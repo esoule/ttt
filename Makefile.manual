@@ -22,9 +22,9 @@ SHELL="/bin/sh"
 # include file path for blt, tcl, tk, and X11.
 #
 
-TK_INCLUDES=	-I/usr/local/include/tcl7.6 -I/usr/local/include/tk4.2 \
+TK_INCLUDES=	-I/usr/local/include/tcl8.3 -I/usr/local/include/tk8.3 \
 		-I/usr/local/blt/lib
-TK_LIBS=	-lBLT -ltk42 -ltcl76 -lX11
+TK_LIBS=	-lBLT -ltk83 -ltcl83 -lX11
 
 
 SITE_INCLUDES=	-I. -I/usr/X11R6/include -I/usr/local/include $(TK_INCLUDES)
@@ -54,10 +54,11 @@ SITE_LDFLAGS=	-L/usr/X11R6/lib -L/usr/local/lib -L/usr/local/blt/lib
 #SYS_DEFINES=	-DALIGN_WORD -DHAVE_GETHOSTENT
 
 # for NewsOS6.x
-#SYS_DEFINES=	-DSVR4 -DALIGN_WORD -DHAVE_GETHOSTENT -DHAVE_SYS_SOCKIO_H 
+#SYS_DEFINES=	-DSVR4 -DALIGN_WORD -DHAVE_GETHOSTENT -DHAVE_SYS_SOCKIO_H
 #SYS_LIBS=	-lsocket -lnsl
 
-# for Linux (Slackware3.0 + tcpdump-3.0.4 for linux) (should be site-dependent)
+# for Linux
+#SYS_DEFINES= -D_BSD_SOURCE
 #SYS_INCLUDES=	-I/usr/include/tcl -I/src/tcpdump-3.0.4/linux-include
 
 #

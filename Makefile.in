@@ -35,6 +35,12 @@ INCLUDES     = -I. @INCLUDES@
 LIBRARIES    = @LIBS@
 
 # ------------------------------------------------------------------------
+#       Library directives for pcap
+# ------------------------------------------------------------------------
+
+PCAP_LIB    = @PCAP_LIB@
+
+# ------------------------------------------------------------------------
 #       Don't edit anything beyond this point
 # ------------------------------------------------------------------------
 
@@ -58,6 +64,7 @@ TEXTVIEW_OBJS=	textview.o common.o net_names.o remote.o \
 TTT_HEADERS=	ttt.h ttt_tk.h ttt_remote.h ttt_window.h ttt_node.h
 
 PROG=	ttt tttprobe tttview
+EXTRA_PROG=	ttttextview tttrelay
 
 all: $(PROG)
 
@@ -65,7 +72,7 @@ ttt: $(TTT_OBJS)
 	$(CC) -o $@ $(TTT_OBJS) $(LDFLAGS) $(LIBRARIES)
 
 tttprobe: $(PROBE_OBJS)
-	$(CC) -o $@ $(PROBE_OBJS) $(STATICLINK) $(LDFLAGS) $(LIBRARIES)
+	$(CC) -o $@ $(PROBE_OBJS) $(STATICLINK) $(LDFLAGS) $(PCAP_LIB)
 
 tttview: $(VIEW_OBJS)
 	$(CC) -o $@ $(VIEW_OBJS) $(LDFLAGS) $(LIBRARIES)
@@ -74,7 +81,7 @@ ttttextview: $(TEXTVIEW_OBJS)
 	$(CC) -o $@ $(TEXTVIEW_OBJS) $(LDFLAGS) $(LIBRARIES)
 
 tttrelay: relay.o
-	$(CC) -o $@ relay.o $(STATICLINK) $(LDFLAGS) $(LIBRARIES)
+	$(CC) -o $@ relay.o $(STATICLINK) $(LDFLAGS)
 
 tk_view.o: tk_ttt.c
 	$(CC) $(CC_SWITCHES) -DTTT_VIEW -o $@ -c tk_ttt.c
@@ -93,7 +100,6 @@ install: all
 		mkdir $(libdir); \
 	fi
 	$(INSTALL) -m 444 -o bin -g bin ttt.tcl $(libdir)
-	
 
 install-man:
 	for i in ttt tttprobe tttview; do \
@@ -102,13 +108,13 @@ install-man:
 	done
 
 clean:
-	$(RM) $(PROG) *.o core *.core *.bak *\~ "#"* *pure* .pure*
+	$(RM) $(PROG) $(EXTRA_PROG) *.o core *.core *.bak *\~ "#"* .pure*
 
 GENERATED_FILES = \
-	config.status config.cache config.log \
+	config.status config.cache config.log configure.lineno \
 	Makefile
 
 distclean: 
-	$(RM) $(PROG) *.o core *.core *.bak *\~ "#"* *pure* .pure*
+	$(RM) $(PROG) $(EXTRA_PROG) *.o core *.core *.bak *\~ "#"* .pure*
 	$(RM) $(GENERATED_FILES)
 

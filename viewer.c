@@ -1,4 +1,4 @@
-/* $Id: viewer.c,v 0.6 2000/12/20 14:29:45 kjc Exp kjc $ */
+/* $Id: viewer.c,v 0.7 2003/10/16 10:38:32 kjc Exp kjc $ */
 /*
  *  Copyright (c) 1996-2000
  *	Sony Computer Science Laboratories, Inc.  All rights reserved.
@@ -17,15 +17,21 @@
    shared by tttview and ttttextview but TTT_TEXT flag is set for
    ttttextview. */
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <ctype.h>
 #include <netdb.h>
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "ttt.h"
 #include "ttt_node.h"
 #include "ttt_remote.h"
+#include "ttt_tk.h"
 
 #define BUFFER_SIZE	4096	/* big enough */
 static char buffer[BUFFER_SIZE];	/* receive buffer */
@@ -37,7 +43,7 @@ static struct timeval remote_time;
 static int shared_port = 1;		/* share the multicast port */
 static int multicast = 0;		/* use multicast */
 
-void view_sockread(int clientdata, int mask);
+void view_sockread(ClientData clientdata, int mask);
 static int check_seqno(int seq_no);
 static int read_record(struct ttt_record *trp);
 
@@ -178,7 +184,7 @@ int view_opensock(void)
 	printf("reading from [%s] ....\n", probe_name);
     }
     else
-	bzero(&probe_addr, sizeof(probe_addr));
+	memset(&probe_addr, 0, sizeof(probe_addr));
 
     return sockfd;
 }
@@ -281,7 +287,7 @@ static int check_seqno(int seq_no)
 }
 
 
-void view_sockread(int clientdata, int mask)
+void view_sockread(ClientData clientdata, int mask)
 {
     int sockfd, nbytes, fromlen, rsize, seq_no, nrecords, i;
     struct sockaddr_in from_addr;

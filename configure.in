@@ -1,5 +1,8 @@
 AC_INIT()
 AC_CONFIG_AUX_DIR(cf)
+AC_PROG_CC
+AC_EXEEXT
+AC_OBJEXT
 
 # -----------------------------------------------------------------------
 #
@@ -22,10 +25,13 @@ tttFlags=""
 
 ttt_ckcmd_tcl_home=""
 ttt_ckcmd_tk_home=""
-ttt_ckcmd_blt_home="no"
-ttt_ckcmd_pcap_home="yes"
+ttt_ckcmd_blt_home=""
+ttt_ckcmd_pcap_home=""
 ttt_ckcmd_cc=""
 ttt_ckcmd_ipv6="auto"
+
+pcapLibrary=""
+pcapRunPath=""
 
 AC_ARG_WITH(tcl, [  --with-tcl=DIR          find Tcl headers and libraries in DIR],
   ttt_ckcmd_tcl_home=$withval)
@@ -109,7 +115,7 @@ else
 fi
 
 if test "${tttHaveGcc}" = "yes" ; then
-  GCCFLAGS="-Wwrite-strings -fwritable-strings"
+  GCCFLAGS="-Wall -Wwrite-strings -fwritable-strings"
 else 
   GCCFLAGS=""
 fi
@@ -573,7 +579,7 @@ if test "${dir}" != "/usr/include" ; then
 fi
 
 if test "${ttt_ckcmd_pcap_home}" != "no" ; then
-  if test "${ttt_ckcmd_pcap_home}" = "yes" ; then
+  if test "x${ttt_ckcmd_pcap_home}" = "x" ; then
     spec="-lpcap"
     dir=""
   else
@@ -583,8 +589,10 @@ if test "${ttt_ckcmd_pcap_home}" != "no" ; then
   AC_CHECK_LIB(pcap, main, [found=yes], [found=no], $spec)
   if test "${found}" = "yes" ; then
     tttLibraries="${tttLibraries} ${spec}"
+    pcapLibrary="${spec}"
     if test "x${dir}" != "x" ; then
       tttRunPath="${tttRunPath}:${dir}"
+      pcapRunPath="${dir}"
     fi
   else
     echo "can't find pcap library file \"libpcap.a\""
@@ -659,6 +667,7 @@ AC_MSG_CHECKING(for IPv6 support)
 if test "$ttt_ckcmd_ipv6" = auto; then
         AC_TRY_COMPILE([#define INET6
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <netinet/in.h>],
                 [int x = IPPROTO_IPV6; struct in6_addr a;],
                 [ac_cv_ipv6="yes"], [ac_cv_ipv6="no"])
@@ -695,6 +704,10 @@ case $target in
   *-solaris2*)
     LDFLAGS="-R ${tttRunPath}"
     tttLibraries="${tttLibraries} -ldl"
+    pcapLibrary="${pcapLibrary} -ldl"
+    if test "x${pcapRunPath}" != "x" ; then 
+       PCAP_LDFLAGS="-R ${pcapRunPath}"
+    fi
     ;;
 
   *-freebsd*)
@@ -702,15 +715,23 @@ case $target in
 
   *-netbsd*|*-openbsd*)
     LDFLAGS="-R ${tttRunPath}"
+    if test "x${pcapRunPath}" != "x" ; then 
+       PCAP_LDFLAGS="-R ${pcapRunPath}"
+    fi
     ;;
 
   *-bsdi*)
     tttLibraries="${tttLibraries} -ldl"
+    pcapLibrary="${pcapLibrary} -ldl"
     ;;
 
   *-linux*)
     tttFlags="-D_BSD_SOURCE ${tttFlags}"
     tttLibraries="${tttLibraries} -ldl"
+    pcapLibrary="${pcapLibrary} -ldl"
+    if test "x${pcapRunPath}" != "x" ; then 
+       PCAP_LDFLAGS="-R ${pcapRunPath}"
+    fi
     ;;
 
   *)
@@ -728,6 +749,9 @@ AC_SUBST(TTT_LIBDIR)
 TTT_FLAGS=${tttFlags}
 AC_SUBST(TTT_FLAGS)
 
+PCAP_LIB="${PCAP_LDFLAGS} ${pcapLibrary}"
+AC_SUBST(PCAP_LIB)
+
 #--------------------------------------------------------------------
 #	Print out some of the more important settings 
 #--------------------------------------------------------------------
@@ -738,10 +762,10 @@ echo "  tcl.h      found in  $tclIncSpec"
 echo "  tk.h       found in  $tkIncSpec"
 echo "  blt.h      found in  $bltIncSpec"
 echo "  X11/Xlib.h found in  -I$x_includes"
-echo "  libtcl.a   found in  $tclLibSpec"
-echo "  libtk.a    found in  $tkLibSpec"
-echo "  libBLT.a   found in  $bltLibSpec"
-echo "  libX11.a   found in  -L$x_libraries -lX11"
+echo "  libtcl     found in  $tclLibSpec"
+echo "  libtk      found in  $tkLibSpec"
+echo "  libBLT     found in  $bltLibSpec"
+echo "  libX11     found in  -L$x_libraries -lX11"
 echo ""
 echo "Directories where TTT is to be installed:"
 echo ""
@@ -757,6 +781,7 @@ echo ""
 #echo "  LIBS:  $LIBS"
 #echo "  LDFLAGS:  $LDFLAGS"
 #echo "  TTT_FLAGS:  $TTT_FLAGS"
+#echo "  PCAP_LIB:  $PCAP_LIB"
 echo ""
 
 #--------------------------------------------------------------------

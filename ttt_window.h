@@ -1,4 +1,4 @@
-/* $Id: ttt_window.h,v 0.2 2000/12/20 14:29:45 kjc Exp kjc $ */
+/* $Id: ttt_window.h,v 0.3 2003/10/16 10:38:32 kjc Exp kjc $ */
 /*
  *  Copyright (c) 1996-2000
  *	Sony Computer Science Laboratories, Inc.  All rights reserved.
@@ -48,7 +48,7 @@ void stat_record(long type, int n);
 int stat_ranking(long type, struct wg_entry **rank_list, int n);
 int stat_update(struct wg_entry **ranking, struct wg_entry **old_ranking,
 		int *update_list, int n);
-int stat_set_colors(char *string);
+int stat_set_colors(const char *string);
 
 void wg_init(void);
 void wg_cleanup(void);
