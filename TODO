@@ -1,0 +1,18 @@
+
+- check
+	default address of viewer
+	default multicast address
+	default port number
+
+- rewrite node.c
+	simple binary trees and 32-entry size-tables are too inefficient
+	for backbone networks.  use heap-sort or balanced-tree.
+
+- ip fragmentation: current version supports only udp.
+
+WISH-LIST:
+
+- bar graph support
+
+- it would be nice if the system can be configured hierarchically and
+  the total traffic of subnets can be displayed.

@@ -1,0 +1,485 @@
+
+	TTT: Tele Traffic Tapper (version 1.1)
+
+					98/07/09
+
+ttt is yet another descendant of tcpdump but it is capable of real-time,
+graphical, and remote traffic-monitoring.  ttt won't replace tcpdump,
+rather, it helps you find out what to look into with tcpdump.
+
+Features:
+    - Automatic Ranking of Protocols and Hosts:
+	ttt monitors the network and automatically picks up the main
+	contributors of the traffic within the time window (60 sec by
+	default).  You can see the behavior of the traffic of the
+	past 60 seconds.  The graphs are updated every second by
+	default. 
+
+	ttt presents two separate graphs in a window.  One for a
+	protocol breakdown and the other for an ip-host breakdown.
+	By doing this, you can tell from the graphs something like
+	"hey, the traffic jumps up!  host A and host B are talking
+	over ftp."
+
+    - Real-Time Monitoring:
+	The key mechanism of ttt is the real-time traffic ranking.
+	The scheme is twofold:
+	(1) 1st stage:
+	    For each interval (1 sec by default), ttt adds up the
+	    packet length of each protocol and host within the
+	    interval.  At the end of the interval, the top 10
+	    contributors are picked up by both protocol and host.
+	(2) 2nd stage:
+	    ttt keeps track of the ranking by the peak traffic within
+	    the time window (60 sec by default), and updates the top 6
+	    in the auto-scaled graphs at every interval.
+
+    - Remote Monitoring with IP-Multicast support:
+	Because the 1st stage process reduces the traffic information
+	to a minimum, the output of the 1st stage can be transferred
+	over the network to a remote host and the 2nd stage process
+	can be done at the remote host.
+
+	The max packet size is 272 bytes.  With the 1 sec default interval,
+	it takes about 2Kbps, which would be negligible for most LAN
+	settings and would be acceptable even for WAN settings.  The
+	ttt traffic can be reduced further with a longer interval.  
+	It's my intension to make ttt a useful tool to monitor heavily-
+	congested backbone networks from my desktop.
+
+	ttt uses UDP to send the traffic info and supports IP-Multicast.
+	If you install a ttt probe with multicast, a group of people
+	can see the traffic graph on his/her own desktop. (yes, you
+	don't need to be a "root" to see the graph any more!)
+
+    - IPv6 Aware: (experimental)
+	ttt knows about IPv6 packets.  For example, an IPv6 host name is
+	shown like "fe80::0800:2001:a237" and a ftp over IPv6 is shown
+	as "ftp-data/ip6".
+	
+	Note that when you enable the IPv6 option, the system takes a
+	bit more memory to keep 128-bit IPv6 addresses.
+
+    - Portable:
+	ttt uses two portable libraries for packet-capturing and
+	graph-drawing, and ttt itself is fairly	portable.
+	For packet capturing, "libpcap" of tcpdump from Lawrence
+	Berkeley Laboratory is used.
+	For auto-scale graphs, "libBLT" for Tcl/Tk from AT&T Bell
+	Laboratories is used.
+	So, if you already have tcpdump and Tcl/Tk on your machine,
+	there would be no problem to install ttt.
+
+    - Easy to customize:
+	Many network administrators have their own requirements.
+	Customizing ttt to trace some specific protocol would be
+	straightforward.  (so, I have skipped analysis of apple talk,
+	decnet, osi, etc.)
+	Also, since GUI part is based on Tcl/Tk, you can set
+	parameters from a Tcl script, or you can set some parameters
+	afterwards from Tcl Shell. 
+
+	Currently, ttt understands ethernet frame, llc/snap frame of
+	802.3 and FDDI. 
+
+Installing TTT:
+    Getting the source code:
+	http://www.csl.sony.co.jp/person/kjc/software.html
+	  or
+	ftp://ftp.csl.sony.co.jp/pub/kjc/ttt-1.1.tar.gz
+
+    First, you have to install "libpcap" and "libBLT (2.1, 2.3 or 2.4)"
+    (and, of course, Tcl/Tk).  Those are placed in the ttt distribution 
+    directory at SonyCSL or they can be found at:
+
+	ftp://ftp.ee.lbl.gov/libpcap-*.tar.Z
+
+	http://www.tcltk.com/blt/
+
+    I myself is currently using libpcap-0.4a6 and blt2.4c with Tcl8.0p2
+    and Tk8.0p2 on FreeBSD-2.2.6 and Solaris2.5.1.
+
+    libpcap is available for most platforms.  (it comes with tcpdump.)
+    [ I made a patch which makes use of the BIOCSBLEN ioctl of bpf.
+    apply this if you are using a 4.4BSD descendant and the kernel
+    drops too many packets. ]
+
+    <README of the BLT2.4 says:>
+	This release has been compiled and tested with versions:
+
+	Tcl 7.5 / Tk 4.1
+	Tcl 7.6 / Tk 4.2
+	Tcl 8.0 / Tk 8.0
+
+	[Tk 8.1a2 can work, but needs replacements for a few functions that
+	used to be in Tcl 8.0.  Since 8.1 is still experimental (alpha), it's
+	a lesser priority. But if you absolutely need BLT for 8.1a2, please
+	let me know.]
+
+Building TTT:
+   
+    Run ./configure
+
+	By default, the ttt files are installed
+	in "/usr/local/{bin,lib/ttt,man}".
+	use "--prefix=path" to change the install directory.
+
+	available switches are:
+		--with-tcl=DIR
+		--with-tk=DIR
+		--with-blt=DIR
+		--with-pcap=DIR
+		--with-cc=CC		
+		--enable-ipv6, --disable-ipv6
+    
+    Then, just type "make".  It will create 3 programs.
+
+	ttt	  --	a standalone traffic monitor program.
+
+	tttprobe  --	a network probe program for remote-monitoring.
+
+	tttview	  --	a viewer program for remote-monitoring
+
+     You can create other tools manually:
+	tttrelay  --	a program which just relays ttt packets,
+			which might be useful when you have a probe
+			behind a firewall or to bridge
+			multicast-capable networks.
+
+	ttttextview --	a text based viewer for debugging.
+
+Running TTT:
+	To run "ttt" or "tttprobe", you must be a "root" for most
+	systems since only root is allowed to access the network
+	filter device.
+
+	To run "ttt", just type "./ttt" in the ttt directory, a window
+	with two graphs will pop up.
+	You need to be in the ttt directory since some scripts
+	are required in the current directory.
+
+	To do remote-monitoring, run a probe on one machine by typing
+	"./tttprobe hostname" where the hostname is the name of the other
+	machine.  On the remote machine, just type "./tttview".
+	To use multicast, use "./tttprobe -multi" and "./tttview -multi"
+	instead.
+
+Command Line Options:
+	(I haven't made man pages yet.  So I include the brief
+	explanations here.)
+
+  ttt [options]    (NOTE: command options do not work with Tk version 3.x)
+    possible options are:	
+    [-interface device] specifies the interface for packet capture.
+			if not specified, the default interface is chosen.
+			only useful when there are more than two interfaces.
+    [-interval ms]	sets the interval in msec. the default is 1000 msec.
+
+  tttprobe [options] [dest]
+    [dest]		specifies the remote host (viewer).
+			dest may be a multicast address.
+			dest should be specified unless -multicast is specified.
+    possible options are:	
+    [-interface device] specifies the interface for packet capture.
+			if not specified, the default interface is chosen.
+			only useful when there are more than two interfaces.
+    [-multicast]	shorthand for the default multicast dest.
+			equivalent to "224.8.8.0"
+    [-port dest_port]   specifies the udp port number of the remote host.
+			the default is 7288.
+    [-ttl time-to-live] specifies the time-to-live for multicast.
+			the default is 1. (subnet local)
+    [-interval ms]	specifies the report interval in msec.
+			the default is 1000 msec.
+
+  tttview [options]    (NOTE: command options do not work with Tk version 3.x)
+    possible options are:	
+    [-addr recv_addr]	specifies the local address.  addr may be a 
+			multicast address.
+			if not specified, the default address is chosen.
+			only useful for multicast address.
+    [-mcastifaddr addr] specifies the multicast interface address.
+			only useful when you select an interface to join a
+			multicast group.
+    [-port recv_port]	specifies the udp port to receive the report.
+			the default is 7288.
+    [-multicast]	shorthand for the default multicast address.
+			equivalent to "-addr 224.8.8.0"
+    [-probe addr]	specifies the address of a probe.
+			only useful to select one among multiple probes.
+
+  ttttextview [options]
+    possible options are:	
+    [-addr recv_addr]	specifies the local address.  addr may be a 
+			multicast address.
+			if not specified, the default address is chosen.
+			only useful for multicast address.
+    [-mcastifaddr addr] specifies the multicast interface address.
+			only useful when you select an interface to join a
+			multicast group.
+    [-port recv_port]	specifies the udp port to receive the report.
+			the default is 7288.
+    [-multicast]	shorthand for the default multicast address.
+			equivalent to "-addr 224.8.8.0"
+    [-probe addr]	specifies the address of a probe.
+			only useful to select one among multiple probes.
+
+  tttrelay [option] dest 
+    dest		specifies the receiver (viewer).
+			dest may be a multicast address.
+    possible options are:	
+    [-addr addr]	specifies the local address.  addr may be a 
+			multicast address.
+			if not specified, the default address is chosen.
+			only useful for multicast address.
+    [-mcastifaddr addr] specifies the multicast interface address.
+			only useful when you select an interface to join a
+			multicast group.
+    [-port recv_port]	specifies the udp port to receive the report.
+			the default is 7288.
+    [-probe addr]	specifies the address of a probe.
+			only useful to select one among multiple probes.
+
+
+Examples:
+
+ point-to-point monitoring:
+    when you run a probe on hostA and a viewer on hostB:
+	[hostA]# tttprobe hostB
+	[hostB]% tttview
+
+    you can also use dotted ip address for A.
+	[hostA]# tttprobe 43.27.98.80
+
+  multicast:
+    when using the default multicast address:
+	[hostA]# tttprobe -multi
+	[hostB]% tttview -multi
+
+    this is equivalent to
+	[hostA]# tttprobe 224.8.8.0
+	[hostB]% tttview -addr 224.8.8.0
+
+  to set the interval to 3 sec.
+	[hostA]# tttprobe -interval 3000 hostB
+
+  to specify interface "ef1":
+	[hostA]# tttprobe -interface ef1 hostB
+
+  relaying packets:
+    if hostA can't talk to hostB directly, but hostC can reach both
+    hostA and hostB:
+	[hostA]# tttprobe hostC
+	[hostC]% tttrelay hostB
+	[hostB]% tttview
+
+  multicast relay:
+	[hostA]# tttprobe -multi
+	[hostC]% tttrelay -addr 224.8.8.0 hostD
+	[hostD]% tttrelay 224.8.8.0
+	[hostB]% tttview -multi
+
+  if you are getting paranoid on long-latency:
+	[hostA]# tttprobe -port 6000 hostB
+	[hostB]% tttrelay -port 6000 hostA -dport 6001
+	[hostA]% tttrelay -port 6001 hostB -dport 6001
+		...........
+	[hostB]% tttrelay -port 6008 hostA -dport 6009
+	[hostA]% tttrelay -port 6009 hostB -dport 6009
+	[hostB]% tttview -addr 6009
+
+Tcl vars:
+  ttt and tttview read a tcl script "ttt.tcl" at startup.  you can
+  set some parameters in this file. if the following tcl variables are
+  set, they are read as ttt parameters.
+
+  ttt_colors: 	  colors to use.
+  ttt_nohostname: no hostname translation.
+(ttt only)
+  ttt_interface:  packet capture interface device.  
+  ttt_interval:   interval in msec.
+(tttview only)
+  ttt_portno:	  udp port number to receive ttt reports. 
+  ttt_viewname:   my address to receive ttt reports. (same as -addr option)
+
+  also you can change some parameters from Tcl Shell of "ttt" and "tttview"
+  as a ttt command.
+  currently, only interval (ttt only) and no hostname translation are
+  supported.
+
+examples:
+  % ttt get interval
+  1000
+  % ttt set interval 3000
+  3000
+
+  % ttt get nohostname
+  0
+  % ttt set nohostname 1
+  1
+
+How to read graphs:
+
+The basic rule of the protocol breakdown is that when ttt does further
+breakdown, ttt doesn't show the parent protocol.  For example, ttt
+shows "icmp/ip" but not "udp/ip" since udp is further decomposed to
+udp services.  
+One exception is "ip/ether" which is a good indicator of the total
+traffic. (why not using the total ethernet frames?  currently, the
+underlying systems do not report consistent information other than IP.
+for now, using the IP traffic seems to be much better.)
+
+For the IP traffic, src and dest are ORed.  Thus, when you see two hosts
+have same traffic pattern, it is most likely that those two talk to each
+other.  Similarly, when you see two protocols (e.g. nfsd/udp and
+1023/udp) have same traffic pattern, they are most likely the server
+and the client.
+You can filter out src hosts or dst hosts from tcl shell.
+
+  % ttt filter src
+
+  % ttt filter dst
+
+  % ttt unfilter src
+
+  % ttt unfilter dst
+
+tcp/udp service names are read into the internal tables at the
+startup.  If your system supports gethostent(3) and HAVE_GETHOSTENT
+is set for compilation, host names are also read at the startup.
+
+Pcap stat line shows the capture status from "libpcap", "recv" means
+how many packets are received by the packet filter and "drop" means
+how many packets are dropped in the kernel.
+Ttt stat reports how many reports are lost.
+
+Packet Capture Performance:
+
+The biggest problem seems to be the performance of the packet filter.
+If the traffic seems too low, it is likely that the kernel drops
+packets before ttt gets them.  
+
+If you have the packet drop problem and your system has 4.4BSD BPF,
+try the patch "libpcap.diff" included in this directory.  The original
+libpcap-0.0.6 doesn't use the "set buffer length" ioctl provided by
+bpf.  This improves the performance of my note pc (Dec HiNote Ultra
+CT475(DX4/75MHz) with 3Com 3C589C PCMCIA Ethernet Card / BSD/OS2.1)
+from less than 1Mbps to about 3Mbps. 
+(But this may cause longer filter delay for small traffic.  I'm not
+sure about this.)
+
+My Sun Ultra1/Solaris2.5 can capture more than 8Mbps out of 10Mbps
+Ethernet.
+
+Some Notes:
+
+Currently, "libpcap" is still in an alpha release and the packet
+report other than IP is not consistent among different platforms.
+(it's a problem of different packet filter implementation of the
+underlying operating systems.)
+We would benefit from libpcap when it becomes more stable and supports
+more platforms. And, anyway, I guess LBL's effort is more dependable
+than mine :-) 
+
+
+Send bug reports, suggestions, etc. to
+
+	kjc@csl.sony.co.jp
+
+				Kenjiro Cho
+				Sony Computer Science Laboratory Inc.
+				WIDE Project
+
+
+CHANGES:
+
+98/07/09	version-1.1
+
+98/07/08	add autoconf support (finally!)
+
+		make it default to lookup hostnames.  to disable it,
+		uncomment DONT_LOOKUP_HOSTNAME in ttt.h.
+
+98/07/07	add BLT2.4, tcl8.0/tk8.0 support.
+		contributed by Kimio Ishii <ishii@csl.sony.co.jp>.
+		the graphs can scale with BLT2.4! but compile option 
+		"-fwritable-strings" is required.
+
+98/04/03	make this release 1.0.
+
+98/03/06	fix IPv6 option header handling; hlen shows (entries - 1)
+		not byte-count.
+
+98/03/03	merge viewer fixes from cbqmonitor.
+		comment out cursor functions in ttt.tcl; they are a bit 
+		annoying.
+
+97/10/17	version-0.4.1
+		add man pages
+		add BLT2.3 support
+		make ttt installable by "make install".
+		(no major change in the code.)
+
+97/08/17	version-0.4
+		add simple ipv4 fragment support.
+
+97/05/14	version-0.3  minor update
+		(no major change in the code.)
+
+96/09/02	version-0.2  first public release
+
+
+COPYRIGHT:
+
+/*
+ *  Copyright (c) 1996
+ *	Sony Computer Science Laboratory Inc.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms of parts of or the
+ * whole original or derived work are permitted provided that the above
+ * copyright notice is retained and the original work is properly
+ * attributed to the author. The name of the author may not be used to
+ * endorse or promote products derived from this software without
+ * specific prior written permission.
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+ */
+
+    part of the source code is derived from other sources (mostly from
+    tcpdump), and copyrighted by the following notices.
+
+/*
+ * Copyright (c) 1990, 1991, 1992, 1993, 1994
+ *	The Regents of the University of California.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that: (1) source code distributions
+ * retain the above copyright notice and this paragraph in its entirety, (2)
+ * distributions including binary code include the above copyright notice and
+ * this paragraph in its entirety in the documentation or other materials
+ * provided with the distribution, and (3) all advertising materials mentioning
+ * features or use of this software display the following acknowledgement:
+ * ``This product includes software developed by the University of California,
+ * Lawrence Berkeley Laboratory and its contributors.'' Neither the name of
+ * the University nor the names of its contributors may be used to endorse
+ * or promote products derived from this software without specific prior
+ * written permission.
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+ */
+
+/*
+ * Copyright (c) 1994 Bell Communications Research Inc. (Bellcore).
+ *
+ * Permission to use, copy, modify and distribute this material for any
+ * purpose and without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies,
+ * and the name of Bellcore not be used in  advertising or publicity
+ * pertaining to this material without the specific, prior written
+ * permission of an authorized representative of Bellcore. BELLCORE
+ * MAKES NO REPRESENTATIONS ABOUT THE SUITABILITY OF THIS MATERIAL
+ * FOR ANY PURPOSE. IT IS PROVIDED "AS IS", WITHOUT ANY EXPRESS OR
+ * IMPLIED WARRANTIES.
+ */

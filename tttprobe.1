@@ -1,0 +1,76 @@
+.TH TTTPROBE 1 "14 November 1997"
+.BS
+'\" Note:  do not modify the .SH NAME line immediately below!
+.SH NAME
+tttprobe \- probe program for Tele Traffic Tapper
+.SH SYNOPSIS
+.na
+.B tttprobe
+[
+.B \-interface 
+.I device
+] [
+.B \-multicast 
+]
+.br
+.ti +9
+[
+.B \-port
+.I dest_port
+] [
+.B \-ttl
+.I time-to-live
+] 
+.br
+.ti +9
+[
+.B \-interval 
+.I ms
+] [
+.B dest
+]
+.br
+.SH DESCRIPTION
+.LP
+\fITttprobe\fP is a network probe program for remote traffic
+monitoring, used with \fItttview(1)\fP.
+
+You must have read access to
+.IR /dev/bpf* .
+.br
+
+\fITttprobe\fP requires libpcap.
+
+.SH OPTIONS
+.TP
+.B \-interface
+Listen on \fIdevice\fP.
+If unspecified, \fIttt\fP searches the system interface list for the
+lowest numbered, configured up interface (excluding loopback).
+Ties are broken by choosing the earliest match.
+.TP
+.B \-multicast
+Shorthand for the default multicast destination address and the
+destination address can be omitted.  
+It is equivalent to setting the destination to \fI224.8.8.0\fP.
+.TP
+.B \-port
+Specifies the udp port number of the remote viewer. The default is 7288.
+.TP
+.B \-ttl
+Sets the time-to-live for multicast.  The default is 1 (subnet local).
+.TP
+.B \-interval
+Sets the interval to update the graph in \fImsec\fP. The default is
+1000 msec.
+.TP
+.B dest
+Specifies the address of the remote viewer.  
+The destination address can be a hostname or a dotted IP address.
+The destination address can be a multicast address.  
+
+.SH SEE ALSO
+ttt(1), tttview(1), pcap(3)
+
+.SH BUGS
+

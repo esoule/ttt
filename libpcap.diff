@@ -1,0 +1,23 @@
+*** pcap-bpf.c.orig	Fri Jun 28 21:42:35 1996
+--- pcap-bpf.c	Fri Jun 28 22:00:58 1996
+***************
+*** 176,181 ****
+--- 176,193 ----
+  		sprintf(ebuf, "kernel bpf filter out of date");
+  		goto bad;
+  	}
++ #ifdef BPF_MAXBUFSIZE
++ 	if (promisc && promisc > BPF_MAXBUFSIZE/2
++ 	    && promisc <= BPF_MAXBUFSIZE) {
++ 	    /* kludge to set bpf buffer size.
++ 	       pass the buffer size as promisc flag   --kjc */
++ 	    u_int bufsize;
++ 	
++ 	    bufsize = BPF_MAXBUFSIZE;
++ 	    (void)ioctl(fd, BIOCSBLEN, (caddr_t)&bufsize);
++ 	    /* okay if it fails */
++ 	}
++ #endif
+  	(void)strncpy(ifr.ifr_name, device, sizeof(ifr.ifr_name));
+  	if (ioctl(fd, BIOCSETIF, (caddr_t)&ifr) < 0) {
+  		sprintf(ebuf, "%s: %s", device, pcap_strerror(errno));

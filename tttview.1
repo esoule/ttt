@@ -1,0 +1,66 @@
+.TH TTTVIEW 1 "14 November 1997"
+.BS
+'\" Note:  do not modify the .SH NAME line immediately below!
+.SH NAME
+ttt \- remote viewer for Tele Traffic Tapper
+.SH SYNOPSIS
+.na
+.B tttview
+[
+.B \-addr 
+.I addr
+] [
+.B \-mcastifaddr
+.I addr
+] 
+.br
+.ti +8
+[
+.B \-port
+.I recv_port
+] [
+.B \-probe
+.I addr
+]
+.br
+.SH DESCRIPTION
+.LP
+\fITttview\fP is a viewer for remote traffic monitoring, used with
+\fItttprobe(1)\fP.
+.br
+\fITttview\fP reads a startup script named \fIttt.tcl\fP in the current
+directory or in the system default directory (default is
+\fI/usr/local/lib/ttt\fP). 
+Once started, \fItttview\fP goes into Tcl Shell.  
+To quit \fItttview\fP, type \fIquit\fP.
+
+You can change \fIttt variables\fP from Tcl Shell or from the startup script.
+See the comments in \fIttt.tcl\fP for more details.
+
+\fITttview\fP requires libBLT.  libBLT requires Tcl/Tk.
+
+.SH OPTIONS
+.TP
+.B \-addr
+Specifies the \fIdestination address\fP to receive multicast report
+packets from \fItttprobe(1)\fP.
+If not specified, the default address is chosen.
+.TP
+.B \-mcastifaddr
+Specifies the multicast interface address to receive multicast
+report packets from \fItttprobe(1)\fP.
+Only useful when you select an interface to join a multicast group.
+.TP
+.B \-port
+Specifies the UDP port to receive report packets from \fItttprobe(1)\fP.
+The default is 7288.
+.TP
+.B \-probe
+Specifies the address of \fItttprobe(1)\fP.
+Only useful to select one among multiple probes.
+
+.SH SEE ALSO
+ttt(1), tttprobe(1), BLT(n)
+
+.SH BUGS
+

@@ -1,0 +1,145 @@
+# Top level hierarchy
+prefix = /usr/local
+# Pathname of directory to install the binary
+BINDEST = ${prefix}/bin
+# Pathname of directory to install the man page
+MANDEST = ${prefix}/man
+# Pathname of directory to install the library
+LIBDEST = ${prefix}/lib/ttt
+INSTALL = install -c
+SHELL="/bin/sh"
+#
+#	Site Dependent Configuration
+#
+#CC=	gcc
+# specify STATICLINK if you want tttprobe and tttrelay statically linked
+#STATICLINK=	-static
+#WARNINGS=	-Wreturn-type -Wshadow -Wpointer-arith -Wunused \
+#		-Wmissing-prototypes
+
+
+#
+# include file path for blt, tcl, tk, and X11.
+#
+
+TK_INCLUDES=	-I/usr/local/include/tcl7.6 -I/usr/local/include/tk4.2 \
+		-I/usr/local/blt/lib
+TK_LIBS=	-lBLT -ltk42 -ltcl76 -lX11
+
+
+SITE_INCLUDES=	-I. -I/usr/X11R6/include -I/usr/local/include $(TK_INCLUDES)
+
+SITE_LDFLAGS=	-L/usr/X11R6/lib -L/usr/local/lib -L/usr/local/blt/lib
+
+#
+#	System Dependent Configuration
+#
+#	-DALIGN_WORD: for risc machines (e.g. sparc, alpha)
+#	-DHAVE_GETHOSTENT: turn on if the system has gethostent(3).
+#
+
+# for FreeBSD
+# (nothing required)
+
+# for BSD/OS
+#SYS_LIBS=	-lipc
+# for BSD/OS dynamic libraries 
+#SYS_LIBS=	-lipc -ldl
+
+# for Solaris
+#SYS_DEFINES=	-DALIGN_WORD -DHAVE_GETHOSTENT -DHAVE_SYS_SOCKIO_H 
+#SYS_LIBS=	-lsocket -lnsl
+
+# for SunOS4.x
+#SYS_DEFINES=	-DALIGN_WORD -DHAVE_GETHOSTENT
+
+# for NewsOS6.x
+#SYS_DEFINES=	-DSVR4 -DALIGN_WORD -DHAVE_GETHOSTENT -DHAVE_SYS_SOCKIO_H 
+#SYS_LIBS=	-lsocket -lnsl
+
+# for Linux (Slackware3.0 + tcpdump-3.0.4 for linux) (should be site-dependent)
+#SYS_INCLUDES=	-I/usr/include/tcl -I/src/tcpdump-3.0.4/linux-include
+
+#
+# ttt related flags
+#
+#	-DIPV6: for IPv6 support
+#	-DTTT_LIBRARY="your_ttt.tcl_path"
+#
+
+TTT_DEFINES=
+#TTT_DEFINES=	-DIPV6
+#TTT_DEBUG_FLAGS=	-DNODE_DEBUG -DWG_DEBUG -DREMOTE_DEBUG
+
+PCAP_LIB=	 -lpcap
+
+#DEBUG_FLAGS=	-g $(TTT_DEBUG_FLAGS) $(WARNINGS)
+DEBUG_FLAGS=	-O2 -DNDEBUG $(TTT_DEBUG_FLAGS)
+
+CFLAGS=	  $(DEBUG_FLAGS) $(SITE_CFLAGS) $(SYS_CFLAGS)
+LDFLAGS=  $(SITE_LDFLAGS) $(SYS_LDFLAGS)
+DEFINES=  $(TTT_DEFINES) $(SITE_DEFINES) $(SYS_DEFINES)
+INCLUDES= $(SITE_INCLUDES) $(SYS_INCLUDES)
+LIBS=	  $(SITE_LIBS) $(SYS_LIBS)
+
+
+TTT_OBJS=	ttt.o tk_ttt.o common.o display.o account.o net_names.o \
+		window.o node.o net_read.o
+PROBE_OBJS=	probe.o common.o account.o remote.o node.o net_read.o
+VIEW_OBJS=	tk_view.o common.o remote.o display.o net_names.o \
+		window.o viewer.o node_emu.o pcap_inet.o
+TEXTVIEW_OBJS=	textview.o common.o net_names.o remote.o \
+		window.o text_viewer.o node_emu.o pcap_inet.o
+
+TTT_HEADERS=	ttt.h ttt_tk.h ttt_remote.h ttt_window.h ttt_node.h
+
+PROG=	ttt tttprobe tttview
+
+all: $(PROG)
+
+ttt: $(TTT_OBJS)
+	$(CC) -o $@ $(TTT_OBJS) $(LDFLAGS) $(TK_LIBS) $(PCAP_LIB) $(LIBS) -lm
+
+tttprobe: $(PROBE_OBJS)
+	$(CC) -o $@ $(PROBE_OBJS) $(STATICLINK) $(LDFLAGS) $(PCAP_LIB) $(LIBS) $(SYSLIBS)
+
+tttview: $(VIEW_OBJS)
+	$(CC) -o $@ $(VIEW_OBJS) $(LDFLAGS) $(TK_LIBS) $(LIBS) $(SYSLIBS) -lm
+
+ttttextview: $(TEXTVIEW_OBJS)
+	$(CC) -o $@ $(TEXTVIEW_OBJS) $(LDFLAGS) $(LIBS) $(SYSLIBS)
+
+tttrelay: relay.o
+	$(CC) -o $@ relay.o $(STATICLINK) $(LDFLAGS) $(LIBS) $(SYSLIBS)
+
+
+tk_view.o: tk_ttt.c
+	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -DTTT_VIEW -o $@ -c tk_ttt.c
+
+text_viewer.o: viewer.c 
+	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -DTTT_TEXT -o $@ -c viewer.c
+
+.c.o: 
+	$(CC) $(CFLAGS) $(INCLUDES) $(DEFINES) -c $*.c
+
+
+install: all
+	for i in ttt tttprobe tttview; do \
+		$(INSTALL) -m 555 -o bin -g bin $$i $(DESTDIR)$(BINDEST); \
+	done
+	if [ ! -d $(DESTDIR)$(LIBDEST) ]; then \
+		mkdir $(DESTDIR)$(LIBDEST); \
+	fi
+	$(INSTALL) -m 444 -o bin -g bin ttt.tcl $(DESTDIR)$(LIBDEST)
+	
+
+install-man:
+	for i in ttt tttprobe tttview; do \
+		$(INSTALL) -m 444 -o bin -g bin $$i.1 \
+			    $(DESTDIR)$(MANDEST)/man1; \
+	done
+
+cleanobj:;	-rm -f *.o core *.core *.bak ,* *~ "#"*
+
+clean:;		-rm -f $(PROG) *.o core *.core *.bak ,* *~ "#"*
+

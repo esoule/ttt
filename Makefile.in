@@ -1,0 +1,114 @@
+# ------------------------------------------------------------------------
+#       Makefile for TTT
+# ------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------
+#       C Compiler options 
+# ------------------------------------------------------------------------
+
+DEFINES      = @DEFS@ @TTT_FLAGS@ -DTTT_LIBRARY=\"@TTT_LIBDIR@\"
+CFLAGS       = @CFLAGS@ 
+EXTRA_CFLAGS = @GCCFLAGS@
+CC 	     = @CC@
+
+# ------------------------------------------------------------------------
+#       Source and target installation directories
+# ------------------------------------------------------------------------
+
+prefix	     = @prefix@
+exec_prefix  = @exec_prefix@
+srcdir	     = @srcdir@
+bindir       = @bindir@
+libdir	     = @TTT_LIBDIR@
+mandir	     = @mandir@
+
+# ------------------------------------------------------------------------
+#       Include directives for Tcl, Tk, and X include files 
+# ------------------------------------------------------------------------
+
+INCLUDES     = -I. @INCLUDES@
+
+# ------------------------------------------------------------------------
+#       Libraries directives for Tcl, Tk, X11, and BLT
+# ------------------------------------------------------------------------
+
+LIBRARIES    = @LIBS@
+
+# ------------------------------------------------------------------------
+#       Don't edit anything beyond this point
+# ------------------------------------------------------------------------
+
+CC_SWITCHES  = $(CFLAGS) $(EXTRA_CFLAGS) $(DEFINES) $(INCLUDES)
+LDFLAGS      = @LDFLAGS@
+INSTALL      = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+RANLIB 	     = @RANLIB@
+SHELL 	     = /bin/sh
+RM 	     = rm -f
+LN_S	     = @LN_S@
+
+TTT_OBJS=	ttt.o tk_ttt.o common.o display.o account.o net_names.o \
+		window.o node.o net_read.o
+PROBE_OBJS=	probe.o common.o account.o remote.o node.o net_read.o
+VIEW_OBJS=	tk_view.o common.o remote.o display.o net_names.o \
+		window.o viewer.o node_emu.o pcap_inet.o
+TEXTVIEW_OBJS=	textview.o common.o net_names.o remote.o \
+		window.o text_viewer.o node_emu.o pcap_inet.o
+
+TTT_HEADERS=	ttt.h ttt_tk.h ttt_remote.h ttt_window.h ttt_node.h
+
+PROG=	ttt tttprobe tttview
+
+all: $(PROG)
+
+ttt: $(TTT_OBJS)
+	$(CC) -o $@ $(TTT_OBJS) $(LDFLAGS) $(LIBRARIES)
+
+tttprobe: $(PROBE_OBJS)
+	$(CC) -o $@ $(PROBE_OBJS) $(STATICLINK) $(LDFLAGS) $(LIBRARIES)
+
+tttview: $(VIEW_OBJS)
+	$(CC) -o $@ $(VIEW_OBJS) $(LDFLAGS) $(LIBRARIES)
+
+ttttextview: $(TEXTVIEW_OBJS)
+	$(CC) -o $@ $(TEXTVIEW_OBJS) $(LDFLAGS) $(LIBRARIES)
+
+tttrelay: relay.o
+	$(CC) -o $@ relay.o $(STATICLINK) $(LDFLAGS) $(LIBRARIES)
+
+tk_view.o: tk_ttt.c
+	$(CC) $(CC_SWITCHES) -DTTT_VIEW -o $@ -c tk_ttt.c
+
+text_viewer.o: viewer.c 
+	$(CC) $(CC_SWITCHES) -DTTT_TEXT -o $@ -c viewer.c
+
+.c.o: 
+	$(CC) $(CC_SWITCHES) -c $*.c
+
+install: all
+	for i in ttt tttprobe tttview; do \
+		$(INSTALL) -m 555 -o bin -g bin $$i $(bindir); \
+	done
+	if [ ! -d $(libdir) ]; then \
+		mkdir $(libdir); \
+	fi
+	$(INSTALL) -m 444 -o bin -g bin ttt.tcl $(libdir)
+	
+
+install-man:
+	for i in ttt tttprobe tttview; do \
+		$(INSTALL) -m 444 -o bin -g bin $$i.1 \
+			    $(mandir)/man1; \
+	done
+
+clean:
+	$(RM) $(PROG) *.o core *.core *.bak *\~ "#"* *pure* .pure*
+
+GENERATED_FILES = \
+	config.status config.cache config.log \
+	Makefile
+
+distclean: 
+	$(RM) $(PROG) *.o core *.core *.bak *\~ "#"* *pure* .pure*
+	$(RM) $(GENERATED_FILES)
+

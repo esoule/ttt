@@ -1,0 +1,60 @@
+.TH TTT 1 "14 November 1997"
+.BS
+'\" Note:  do not modify the .SH NAME line immediately below!
+.SH NAME
+ttt \- Tele Traffic Tapper
+.SH SYNOPSIS
+.na
+.B ttt
+[
+.B \-interface 
+.I device
+] [
+.B \-interval 
+.I ms
+]
+.br
+.SH DESCRIPTION
+.LP
+\fITtt\fP monitors the network and automatically picks up the main
+contributors of the traffic within the time window (60 sec by
+default).  You can see the behavior of the traffic of the
+past 60 seconds.  The graphs are updated every second by
+default. 
+\fITtt\fP presents two separate graphs in a window.  One for a
+protocol breakdown and the other for an ip-host breakdown.
+To run
+.I ttt
+You must have read access to
+.IR /dev/bpf* .
+.br
+\fITtt\fP reads a startup script named \fIttt.tcl\fP in the current
+directory or in the system default directory (default is
+\fI/usr/local/lib/ttt\fP). 
+Once started, \fIttt\fP goes into Tcl Shell.  
+To quit \fIttt\fP, type \fIquit\fP.
+
+You can change \fIttt variables\fP from Tcl Shell or from the startup script.
+See the comments in \fIttt.tcl\fP for more details.
+
+Also, you can do remote monitoring using \fItttprobe\fP and
+\fItttview\fP programs.
+
+\fITtt\fP requires libpcap and libBLT.  libBLT requires Tcl/Tk.
+
+.SH OPTIONS
+.TP
+.B \-interface
+Listen on \fIdevice\fP.
+If unspecified, \fIttt\fP searches the system interface list for the
+lowest numbered, configured up interface (excluding loopback).
+Ties are broken by choosing the earliest match.
+.TP
+.B \-interval
+Sets the interval to update the graph in \fImsec\fP. The default is 1000 msec.
+
+.SH SEE ALSO
+tttprobe(1), tttview(1), pcap(3), BLT(n)
+
+.SH BUGS
+
