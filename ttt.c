@@ -1,4 +1,4 @@
-/* $Id: ttt.c,v 0.6 1998/09/22 06:22:28 kjc Exp kjc $ */
+/* $Id: ttt.c,v 0.7 1999/03/21 11:17:06 kjc Exp $ */
 /*
  *  Copyright (c) 1996
  *	Sony Computer Science Laboratory Inc.  All rights reserved.
@@ -28,6 +28,7 @@ static void usage(void)
     printf("	[-interface device]\n");
     printf("    [-interval ms]\n");
     printf("    [-dumpfile filename [-speed N]]\n");
+    printf("    [-filter filter_value]\n");
     exit(1);
 }
 
@@ -44,6 +45,8 @@ void ttt_parseargs(int argc, char **argv)
 	    ttt_dumpfile = argv[i];
 	else if (strcmp(argv[i], "-speed") == 0 && ++i < argc)
 	    ttt_speed = atoi(argv[i]);
+	else if (strcmp(argv[i], "-filter") == 0 && ++i < argc)
+	    ttt_filter = strtol(argv[i], NULL, 0);
 	else if (strcmp(argv[i], "-help") == 0 ||
 		 strcmp(argv[i], "--help") == 0 ||
 		 strcmp(argv[i], "-h") == 0)

@@ -1,4 +1,4 @@
-/* $Id: ttt.h,v 0.7 1998/09/22 06:22:28 kjc Exp kjc $ */
+/* $Id: ttt.h,v 0.8 1999/03/21 11:17:06 kjc Exp $ */
 /*
  *  Copyright (c) 1996
  *	Sony Computer Science Laboratory Inc.  All rights reserved.
@@ -53,6 +53,8 @@
 /* trace filter */
 #define TTTFILTER_SRCHOST	0x01
 #define TTTFILTER_DSTHOST	0x02
+#define TTTFILTER_SRCPORT	0x04
+#define TTTFILTER_DSTPORT	0x08
 
 /* for remote monitoring */
 #define TTT_PORT		7288		/* receiver port */

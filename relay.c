@@ -1,4 +1,4 @@
-/* $Id: relay.c,v 0.3 1998/09/22 06:22:28 kjc Exp kjc $ */
+/* $Id: relay.c,v 0.3 1998/09/22 06:22:28 kjc Exp $ */
 /*
  *  Copyright (c) 1996
  *	Sony Computer Science Laboratory Inc.  All rights reserved.

@@ -1,4 +1,4 @@
-/* $Id: net_names.c,v 0.4 1998/07/09 10:07:03 kjc Exp $ */
+/* $Id: net_names.c,v 0.5 1999/03/21 11:17:06 kjc Exp $ */
 /*
  *  Copyright (c) 1996
  *	Sony Computer Science Laboratory Inc.  All rights reserved.
@@ -129,7 +129,9 @@ static struct pname_tab ip_tab[] =
     "udp",	IPPROTO_UDP,		/* user datagram protocol */
     "icmp",	IPPROTO_ICMP,		/* control message protocol */
     "igmp",	IPPROTO_IGMP,		/* group control protocol */
+#ifdef IPPROTO_GGP
     "ggp",	IPPROTO_GGP, 		/* gateway^2 (deprecated) */
+#endif
     "egp",	IPPROTO_EGP,		/* exterior gateway protocol */
     "pup",	IPPROTO_PUP,		/* pup */
     "ospf",	IPPROTO_OSPFIGP,	/* OSPFIGP */

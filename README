@@ -1,7 +1,7 @@
 
-	TTT: Tele Traffic Tapper (version 1.3)
+	TTT: Tele Traffic Tapper (version 1.4)
 
-					98/09/22
+					99/04/12
 
 ttt is yet another descendant of tcpdump but it is capable of real-time,
 graphical, and remote traffic-monitoring.  ttt won't replace tcpdump,
@@ -89,7 +89,7 @@ Installing TTT:
     Getting the source code:
 	http://www.csl.sony.co.jp/person/kjc/software.html
 	  or
-	ftp://ftp.csl.sony.co.jp/pub/kjc/ttt-1.1.tar.gz
+	ftp://ftp.csl.sony.co.jp/pub/kjc/ttt-1.4.tar.gz
 
     First, you have to install "libpcap" and "libBLT (2.1, 2.3 or 2.4)"
     (and, of course, Tcl/Tk).  Those are placed in the ttt distribution 
@@ -99,25 +99,26 @@ Installing TTT:
 
 	http://www.tcltk.com/blt/
 
-    I myself is currently using libpcap-0.4a6 and blt2.4c with Tcl8.0p2
-    and Tk8.0p2 on FreeBSD-2.2.6 and Solaris2.5.1.
+    I myself is currently using libpcap-0.4 and blt2.4h with Tcl8.0p2
+    and Tk8.0p2 on FreeBSD-2.2.8/3.1 and Solaris2.5.1.
 
     libpcap is available for most platforms.  (it comes with tcpdump.)
     [ I made a patch which makes use of the BIOCSBLEN ioctl of bpf.
     apply this if you are using a 4.4BSD descendant and the kernel
     drops too many packets. ]
 
-    <README of the BLT2.4 says:>
+    <README of the BLT2.4h says:>
 	This release has been compiled and tested with versions:
 
 	Tcl 7.5 / Tk 4.1
 	Tcl 7.6 / Tk 4.2
-	Tcl 8.0 / Tk 8.0
+	Tcl/Tk 8.0 patchlevels 2-5
+	Tcl/Tk 8.1b1 
 
-	[Tk 8.1a2 can work, but needs replacements for a few functions that
-	used to be in Tcl 8.0.  Since 8.1 is still experimental (alpha), it's
-	a lesser priority. But if you absolutely need BLT for 8.1a2, please
-	let me know.]
+     <for linux>
+	ttt uses linux-include in the tcpdump source.
+	you have to specify "--with-tcpdump=TCPDUMP_SRC_DIR"
+	(and possibly "--with-pcap=PCAP_DIST_DIR").
 
 Building TTT:
    
@@ -366,27 +367,8 @@ The biggest problem seems to be the performance of the packet filter.
 If the traffic seems too low, it is likely that the kernel drops
 packets before ttt gets them.  
 
-If you have the packet drop problem and your system has 4.4BSD BPF,
-try the patch "libpcap.diff" included in this directory.  The original
-libpcap-0.0.6 doesn't use the "set buffer length" ioctl provided by
-bpf.  This improves the performance of my note pc (Dec HiNote Ultra
-CT475(DX4/75MHz) with 3Com 3C589C PCMCIA Ethernet Card / BSD/OS2.1)
-from less than 1Mbps to about 3Mbps. 
-(But this may cause longer filter delay for small traffic.  I'm not
-sure about this.)
-
 My Sun Ultra1/Solaris2.5 can capture more than 8Mbps out of 10Mbps
 Ethernet.
-
-Some Notes:
-
-Currently, "libpcap" is still in an alpha release and the packet
-report other than IP is not consistent among different platforms.
-(it's a problem of different packet filter implementation of the
-underlying operating systems.)
-We would benefit from libpcap when it becomes more stable and supports
-more platforms. And, anyway, I guess LBL's effort is more dependable
-than mine :-) 
 
 
 Send bug reports, suggestions, etc. to
@@ -399,6 +381,13 @@ Send bug reports, suggestions, etc. to
 
 
 CHANGES:
+
+98/04/12	version-1.4
+
+99/04/12	support BLT2.4h
+		(autoconf checks libBLT24.a as well as libBLT.a)
+
+99/02/08	make autoconf more linux-friendly
 
 98/09/22	version-1.3
 

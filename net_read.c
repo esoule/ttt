@@ -1,4 +1,4 @@
-/* $Id: net_read.c,v 0.9 1998/09/22 06:22:28 kjc Exp kjc $ */
+/* $Id: net_read.c,v 0.10 1999/03/21 11:17:06 kjc Exp $ */
 /*
  *  Copyright (c) 1996
  *	Sony Computer Science Laboratory Inc.  All rights reserved.
@@ -78,7 +78,7 @@ char copyright[] =
 #include "ttt_ipv6.h"
 #endif
 /* for tailqueue macros */
-#ifdef HAVE_SYS_QUEUE_H
+#if defined(HAVE_SYS_QUEUE_H) && !defined(__linux__)
 #include <sys/queue.h>
 #else
 #include "bsd_sys_queue.h"
@@ -147,6 +147,8 @@ static void ether_if_read(u_char *user, const struct pcap_pkthdr *h,
 static void fddi_if_read(u_char *user, const struct pcap_pkthdr *h,
 			 const u_char *p);
 static void atm_if_read(u_char *user, const struct pcap_pkthdr *h,
+			 const u_char *p);
+static void sl_if_read(u_char *user, const struct pcap_pkthdr *h,
 			 const u_char *p);
 static void ppp_if_read(u_char *user, const struct pcap_pkthdr *h,
 			 const u_char *p);
@@ -372,6 +374,26 @@ static void atm_if_read(u_char *pcap, const struct pcap_pkthdr *h,
     }
 }
 
+#ifndef SLIP_HDRLEN
+#define SLIP_HDRLEN 16
+#endif
+
+static void
+sl_if_print(u_char *user, const struct pcap_pkthdr *h, const u_char *p)
+{
+    int caplen = h->caplen;
+    int length = h->len;
+
+    if (caplen < SLIP_HDRLEN)
+	return;
+
+    length -= SLIP_HDRLEN;
+    caplen -= SLIP_HDRLEN;
+    p += SLIP_HDRLEN;
+
+    ip_read(p, length, caplen);
+}
+
 /* just trim 4 byte ppp header */
 static void ppp_if_read(u_char *pcap, const struct pcap_pkthdr *h,
 			const u_char *p)
@@ -466,8 +488,13 @@ static int ip_read(const u_char *bp, const int length, const int caplen)
 	    tcp = (struct tcphdr *)bp;
 	    srcport = ntohs(tcp->th_sport);
 	    dstport = ntohs(tcp->th_dport);
-	    tcp_addsize(srcport, len);
-	    if (dstport != srcport)
+	    if (!(ttt_filter & TTTFILTER_SRCPORT)) {
+		tcp_addsize(srcport, len);
+		if (dstport != srcport
+		    && !(ttt_filter & TTTFILTER_DSTPORT))
+		    tcp_addsize(dstport, len);
+	    }
+	    else if (!(ttt_filter & TTTFILTER_DSTPORT))
 		tcp_addsize(dstport, len);
 	}
 	else {
@@ -476,8 +503,13 @@ static int ip_read(const u_char *bp, const int length, const int caplen)
 	    udp = (struct udphdr *)bp;
 	    srcport = ntohs(udp->uh_sport);
 	    dstport = ntohs(udp->uh_dport);
-	    udp_addsize(srcport, len);
-	    if (dstport != srcport)
+	    if (!(ttt_filter & TTTFILTER_SRCPORT)) {
+		udp_addsize(srcport, len);
+		if (dstport != srcport
+		    && !(ttt_filter & TTTFILTER_DSTPORT))
+		    udp_addsize(dstport, len);
+	    }
+	    else if (!(ttt_filter & TTTFILTER_DSTPORT))
 		udp_addsize(dstport, len);
 	}
 
@@ -653,8 +685,13 @@ static int ipv6_read(const u_char *bp, const int length, const int caplen)
 	tcp = (struct tcphdr *)bp;
 	srcport = ntohs(tcp->th_sport);
 	dstport = ntohs(tcp->th_dport);
-	tcpv6_addsize(srcport, len);
-	if (dstport != srcport)
+	if (!(ttt_filter & TTTFILTER_SRCPORT)) {
+	    tcpv6_addsize(srcport, len);
+	    if (dstport != srcport
+		&& !(ttt_filter & TTTFILTER_DSTPORT))
+		tcpv6_addsize(dstport, len);
+	}
+	else if (!(ttt_filter & TTTFILTER_DSTPORT))
 	    tcpv6_addsize(dstport, len);
     }
     else {
@@ -663,8 +700,13 @@ static int ipv6_read(const u_char *bp, const int length, const int caplen)
 	udp = (struct udphdr *)bp;
 	srcport = ntohs(udp->uh_sport);
 	dstport = ntohs(udp->uh_dport);
-	udpv6_addsize(srcport, len);
-	if (dstport != srcport)
+	if (!(ttt_filter & TTTFILTER_SRCPORT)) {
+	    udpv6_addsize(srcport, len);
+	    if (dstport != srcport
+		&& !(ttt_filter & TTTFILTER_DSTPORT))
+		udpv6_addsize(dstport, len);
+	}
+	else if (!(ttt_filter & TTTFILTER_DSTPORT))
 	    udpv6_addsize(dstport, len);
     }
     return 1;
@@ -708,6 +750,7 @@ static struct printer printers[] = {
 #ifdef DLT_ATM_RFC1483
 	{ atm_if_read,	DLT_ATM_RFC1483 },
 #endif
+	{ sl_if_print,	DLT_SLIP },
 	{ ppp_if_read,	DLT_PPP },
 	{ null_if_read,	DLT_NULL },
 	{ NULL,			0 },

@@ -1,4 +1,4 @@
-/* $Id: tk_ttt.c,v 0.6 1998/09/22 06:22:28 kjc Exp kjc $ */
+/* $Id: tk_ttt.c,v 0.7 1999/03/21 11:17:06 kjc Exp $ */
 /*
  *  Copyright (c) 1996
  *	Sony Computer Science Laboratory Inc.  All rights reserved.
@@ -233,6 +233,16 @@ static int TttCmd(ClientData clientData, Tcl_Interp *interp,
 	    interp->result = "dst hosts filtered out";
 	    return TCL_OK;
 	}
+	else if (strcmp(argv[2], "sport") == 0) {
+	    ttt_filter |= TTTFILTER_SRCPORT;
+	    interp->result = "src ports filtered out";
+	    return TCL_OK;
+	}
+	else if (strcmp(argv[2], "dport") == 0) {
+	    ttt_filter |= TTTFILTER_DSTPORT;
+	    interp->result = "dst ports filtered out";
+	    return TCL_OK;
+	}
     }
     else if (strcmp(argv[1], "unfilter") == 0) {
 	if (strcmp(argv[2], "src") == 0) {
@@ -243,6 +253,16 @@ static int TttCmd(ClientData clientData, Tcl_Interp *interp,
 	else if (strcmp(argv[2], "dst") == 0) {
 	    ttt_filter &= ~TTTFILTER_DSTHOST;
 	    interp->result = "unfilter dst hosts";
+	    return TCL_OK;
+	}
+	else if (strcmp(argv[2], "sport") == 0) {
+	    ttt_filter &= ~TTTFILTER_SRCPORT;
+	    interp->result = "unfilter src ports";
+	    return TCL_OK;
+	}
+	else if (strcmp(argv[2], "dport") == 0) {
+	    ttt_filter &= ~TTTFILTER_DSTPORT;
+	    interp->result = "unfilter dst ports";
 	    return TCL_OK;
 	}
     }

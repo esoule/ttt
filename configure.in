@@ -9,6 +9,7 @@ AC_CONFIG_AUX_DIR(cf)
 #		--with-tk=DIR
 #		--with-blt=DIR
 #		--with-pcap=DIR
+#		--with-tcpdump=DIR (for linux-include)
 #		--with-cc=CC		
 #		--enable-ipv6, --disable-ipv6
 #
@@ -24,6 +25,7 @@ ttt_ckcmd_tcl_home=""
 ttt_ckcmd_tk_home=""
 ttt_ckcmd_blt_home="no"
 ttt_ckcmd_pcap_home="yes"
+ttt_ckcmd_tcpdump_home="yes"
 ttt_ckcmd_cc=""
 ttt_ckcmd_ipv6="auto"
 
@@ -33,6 +35,10 @@ AC_ARG_WITH(tk, [  --with-tk=DIR          find Tk headers and libraries in DIR],
   ttt_ckcmd_tk_home=$withval)
 AC_ARG_WITH(blt, [  --with-blt=DIR          find BLT headers and libraries in DIR],
   ttt_ckcmd_blt_home=$withval)
+AC_ARG_WITH(pcap, [  --with-pcap=DIR          find pcap headers and libraries in DIR],
+  ttt_ckcmd_pcap_home=$withval)
+AC_ARG_WITH(tcpdump, [  --with-tcpdump=DIR          find linux headers in tcpdump source in DIR],
+  ttt_ckcmd_tcpdump_home=$withval)
 AC_ARG_WITH(cc, [  --with-cc=CC		  set C compiler to CC], [
   ttt_ckcmd_cc=$with_cc 
   unset ac_cv_prog_CC
@@ -345,7 +351,12 @@ guesses="\
  /usr/lib"
 
 for dir in $guesses; do
-  if test -r "$dir/libBLT.a" ; then
+  if test -r "$dir/libBLT24.a" ; then
+    bltLibFile="$dir/libBLT24.a"
+    bltLibDir="$dir"
+    bltLibSpec="-L$dir -lBLT24"
+    break
+  elif test -r "$dir/libBLT.a" ; then
     bltLibFile="$dir/libBLT.a"
     bltLibDir="$dir"
     bltLibSpec="-L$dir -lBLT"
@@ -534,6 +545,7 @@ AC_MSG_RESULT([${pcapHdrFile}])
 
 if test "x$pcapHdrFile" = "x" ; then
   echo "can't find pcap header \"pcap.h\""
+  echo "use \"--with-pcap=DIR\" to specify pcap directory"
   exit 1
 fi
 if test "${dir}" != "/usr/include" ; then
@@ -562,6 +574,39 @@ fi
 
 # -----------------------------------------------------------------------
 # 
+# tcpdump linux headers for linux
+#
+# -----------------------------------------------------------------------
+linuxInc=""
+guesses="$ttt_ckcmd_tcpdump_home"
+
+case $target in
+
+  *-linux*)
+	AC_MSG_CHECKING([for tcpdump/linux-include])
+
+	for dir in $guesses; do
+	  if test -r "$dir/linux-include" ; then
+	    linuxInc="$dir/linux-include"
+	    break
+	  fi
+	done
+
+	AC_MSG_RESULT([${linuxInc}])
+
+	if test "x$linuxInc" = "x" ; then
+	  echo "linux requires tcpdump source"
+	  echo "use \"--with-tcpdump=DIR\" to specify tcpdump source directory"
+	  exit 1
+	fi
+
+	tttIncludes="-I${linuxInc} ${tttIncludes}"
+    ;;
+
+esac
+
+# -----------------------------------------------------------------------
+# 
 # -lsocket
 #
 # -----------------------------------------------------------------------
@@ -580,6 +625,13 @@ AC_CHECK_LIB(nsl, main)
 #
 # -----------------------------------------------------------------------
 AC_CHECK_LIB(m, main)
+
+# -----------------------------------------------------------------------
+# 
+# -ldl
+#
+# -----------------------------------------------------------------------
+AC_CHECK_LIB(dl, main)
 
 # -----------------------------------------------------------------------
 #
@@ -661,6 +713,10 @@ case $target in
     ;;
 
   *-bsdi*)
+    tttLibraries="${tttLibraries} -ldl"
+    ;;
+
+  *-linux*)
     tttLibraries="${tttLibraries} -ldl"
     ;;
 
