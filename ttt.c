@@ -1,4 +1,4 @@
-/* $Id: ttt.c,v 0.5 1998/07/09 10:07:03 kjc Exp $ */
+/* $Id: ttt.c,v 0.6 1998/09/22 06:22:28 kjc Exp kjc $ */
 /*
  *  Copyright (c) 1996
  *	Sony Computer Science Laboratory Inc.  All rights reserved.
@@ -27,6 +27,7 @@ static void usage(void)
     printf(" options:\n");
     printf("	[-interface device]\n");
     printf("    [-interval ms]\n");
+    printf("    [-dumpfile filename [-speed N]]\n");
     exit(1);
 }
 
@@ -39,6 +40,10 @@ void ttt_parseargs(int argc, char **argv)
 	    ttt_interface = argv[i];
 	else if (strcmp(argv[i], "-interval") == 0 && ++i < argc)
 	    ttt_interval = atoi(argv[i]);
+	else if (strcmp(argv[i], "-dumpfile") == 0 && ++i < argc)
+	    ttt_dumpfile = argv[i];
+	else if (strcmp(argv[i], "-speed") == 0 && ++i < argc)
+	    ttt_speed = atoi(argv[i]);
 	else if (strcmp(argv[i], "-help") == 0 ||
 		 strcmp(argv[i], "--help") == 0 ||
 		 strcmp(argv[i], "-h") == 0)
@@ -56,7 +61,11 @@ double get_timeindouble(void)
     static struct timeval start;
     static int first = 1;
 
-    gettimeofday(&cur_time, NULL);
+    if (ttt_dumpfile == NULL)
+	    gettimeofday(&cur_time, NULL);
+    else
+	    cur_time = ttt_dumptime;
+
     if (first) {
 	start = cur_time;
 	first = 0;

@@ -12,7 +12,13 @@ ttt \- Tele Traffic Tapper
 ] [
 .B \-interval 
 .I ms
-]
+] [
+.B \-dumpfile
+.I file
+[
+.B \-speed
+.I factor
+] ]
 .br
 .SH DESCRIPTION
 .LP
@@ -23,6 +29,7 @@ past 60 seconds.  The graphs are updated every second by
 default. 
 \fITtt\fP presents two separate graphs in a window.  One for a
 protocol breakdown and the other for an ip-host breakdown.
+\fITtt\fP also accepts a \fItcpdump\fR output as input.
 To run
 .I ttt
 You must have read access to
@@ -52,6 +59,13 @@ Ties are broken by choosing the earliest match.
 .TP
 .B \-interval
 Sets the interval to update the graph in \fImsec\fP. The default is 1000 msec.
+.TP
+.B \-dumpfile
+Uses a dumpfile produced by \fItcpdump -w\fR as input.
+.TP
+.B \-speed
+Specifies the acceleration factor of the replay speed.  
+\fI-speed 10\fR will replay a 10-minute-dumpfile in 1 minute.
 
 .SH SEE ALSO
 tttprobe(1), tttview(1), pcap(3), BLT(n)

@@ -1,4 +1,4 @@
-/* $Id: ttt.h,v 0.6 1998/07/15 04:56:01 kjc Exp $ */
+/* $Id: ttt.h,v 0.7 1998/09/22 06:22:28 kjc Exp kjc $ */
 /*
  *  Copyright (c) 1996
  *	Sony Computer Science Laboratory Inc.  All rights reserved.
@@ -20,8 +20,8 @@
 #include <sys/types.h>
 
 #define TTT_MAJOR	1
-#define TTT_MINOR	2
-#define TTT_VERSION	"1.2"
+#define TTT_MINOR	3
+#define TTT_VERSION	"1.3"
 
 /* default path for ttt.tcl */
 #ifndef TTT_LIBRARY
@@ -71,35 +71,40 @@ extern char *ttt_mcastif;	/* multicast interface address */
 extern int ttt_portno;		/* viewer's port number */
 extern int ttt_nohostname;	/* don't lookup host names */
 extern int ttt_filter;		/* trace filter */
+extern char *ttt_dumpfile;	/* tcpdump file to replay */
+extern int ttt_speed;		/* replay speed */
+extern struct timeval ttt_dumptime;
 
 extern void fatal_error(/*const char *fmt, ...*/);
 
 /* function prototypes */
 
 /* ttt.c */
-void ttt_parseargs(int argc, char **argv);
-double get_timeindouble(void);
+extern void ttt_parseargs(int argc, char **argv);
+extern double get_timeindouble(void);
 
 /* display.c */
-void display_init(void);
-void ttt_display(int time_tick);
+extern void display_init(void);
+extern void ttt_display(int time_tick);
 
 /* net_names.c */
 extern void netname_init(unsigned long netaddr, unsigned long netmask);
 extern char *net_getname(long type, long *id);
 
 /* net_read.c */
-int open_pf(char *interface);
-void close_pf(void);
-int get_pcapstat(u_long *recvp, u_long *dropp, u_long *lostp);
+extern int open_pf(char *interface);
+extern void close_pf(void);
+extern int open_dump(char *file, char *interface);
+extern int get_pcapstat(u_long *recvp, u_long *dropp, u_long *lostp);
+extern int dumpfile_read(void);
 
 /* viewer.c */
-int view_opensock(void);
-void view_closesock(int sockfd);
+extern int view_opensock(void);
+extern void view_closesock(int sockfd);
 /* int get_pcapstat(u_long *recvp, u_long *dropp, u_long *lostp); */
 
 /* textview.c */
-void ttt_textview(int seq_no);
+extern void ttt_textview(int seq_no);
 
 /* endian defines in case they are missing from the system headers */
 #ifndef BIG_ENDIAN

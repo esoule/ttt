@@ -1,4 +1,4 @@
-/* $Id: net_read.c,v 0.8 1998/07/15 04:56:01 kjc Exp $ */
+/* $Id: net_read.c,v 0.9 1998/09/22 06:22:28 kjc Exp kjc $ */
 /*
  *  Copyright (c) 1996
  *	Sony Computer Science Laboratory Inc.  All rights reserved.
@@ -140,6 +140,8 @@ static TAILQ_HEAD(ip4f_list, ip4_frag) ip4f_list; /* IPv4 fragment cache */
 	(*(((struct headname *)((head)->tqh_last))->tqh_last))
 
 void net_read(int clientdata, int mask);
+static void ttt_dumpreader(u_char *user, const struct pcap_pkthdr *h,
+			   const u_char *p);
 static void ether_if_read(u_char *user, const struct pcap_pkthdr *h,
 			  const u_char *p);
 static void fddi_if_read(u_char *user, const struct pcap_pkthdr *h,
@@ -169,6 +171,40 @@ void net_read(int clientdata, int mask)
 {
     if (pcap_dispatch(pd, 1, ttt_netreader, 0) < 0)
 	(void)fprintf(stderr, "pcap_dispatch:%s\n", pcap_geterr(pd));
+}
+
+int dumpfile_read(void)
+{
+    struct timeval end;
+    int rval;
+
+    end = ttt_dumptime;
+    end.tv_sec += ttt_interval / 1000;
+    end.tv_usec += (ttt_interval % 1000) * 1000;
+    if (end.tv_usec > 1000000) {
+	end.tv_sec++;
+	end.tv_usec -= 1000000;
+    }
+
+    while ((rval = pcap_dispatch(pd, 1, ttt_dumpreader, 0)) > 0) {
+	if (ttt_dumptime.tv_sec > end.tv_sec ||
+	    (ttt_dumptime.tv_sec == end.tv_sec &&
+	     ttt_dumptime.tv_usec >= end.tv_usec))
+	    /* end of the interval */
+	       return (rval);
+    }
+    if (rval < 0)
+	(void)fprintf(stderr, "pcap_dispatch:%s\n", pcap_geterr(pd));
+
+    return (rval);
+}
+
+static void ttt_dumpreader(u_char *user, const struct pcap_pkthdr *h,
+			   const u_char *p) 
+{
+    ttt_dumptime = h->ts;
+
+    (*ttt_netreader)(user, h, p);
 }
 
 static void ether_if_read(u_char *user, const struct pcap_pkthdr *h,
@@ -757,6 +793,51 @@ void close_pf(void)
 {
     pcap_close(pd);
 }
+
+int open_dump(char *file, char *interface)
+{
+    int fd;
+    struct bpf_program fcode;
+    u_int localnet, netmask;
+    struct in_addr inaddr;
+
+    printf("packet filter: using dump file %s\n", file);
+    pd = pcap_open_offline(file, errbuf);
+    if (pd == NULL)
+	fatal_error(errbuf);
+
+    /* try to get local network address to print host names */
+    localnet = 0;
+    netmask = 0xffffffff;
+    if (interface == NULL) {
+	device = pcap_lookupdev(errbuf);
+    }
+    else
+	device = interface;
+    if (device != NULL)
+	(void)pcap_lookupnet(device, &localnet, &netmask, errbuf);
+
+    netname_init(localnet, netmask);
+    inaddr.s_addr = localnet;
+    printf("local network is %s", inet_ntoa(inaddr));
+    inaddr.s_addr = netmask;
+    printf(" netmask is %s\n", inet_ntoa(inaddr));
+
+#ifdef notyet  /* bpfcode not yet supported */
+    if (pcap_compile(pd, &fcode, cmdbuf, 1, localnetmask.s_addr) < 0)
+	fatal_error(pcap_geterr(pd));
+
+    if (pcap_setfilter(pd, &fcode) < 0)
+	fatal_error(pcap_geterr(pd));
+#endif /* noyet */
+
+    ttt_netreader = lookup_printer(pcap_datalink(pd));
+
+    fd = fileno(pcap_file(pd));
+
+    return fd;
+}
+
 
 int get_pcapstat(u_long *recvp, u_long *dropp, u_long *lostp)
 {

@@ -1,4 +1,4 @@
-/* $Id: tk_ttt.c,v 0.5 1998/07/08 13:17:09 kjc Exp $ */
+/* $Id: tk_ttt.c,v 0.6 1998/09/22 06:22:28 kjc Exp kjc $ */
 /*
  *  Copyright (c) 1996
  *	Sony Computer Science Laboratory Inc.  All rights reserved.
@@ -38,6 +38,7 @@ static int sockfd;
 #ifndef TTT_VIEW    
 static Tk_TimerToken timer_token;
 static Tk_TimerProc call_display;
+static Tk_TimerProc call_dumpread;
 #endif
 
 void TttCleanup(void);
@@ -109,11 +110,21 @@ static int Ttt_Init(Tcl_Interp *interp)
     display_init();
     netacc_init();
     wg_init();
-    sockfd = open_pf(ttt_interface);
 
-    Tk_CreateFileHandler(sockfd, TK_READABLE, net_read, (ClientData)sockfd);
+    if (ttt_dumpfile == NULL) {
+	sockfd = open_pf(ttt_interface);
 
-    timer_token = Tk_CreateTimerHandler(2000, call_display, 0);
+	Tk_CreateFileHandler(sockfd, TK_READABLE, net_read,
+			     (ClientData)sockfd);
+
+	timer_token = Tk_CreateTimerHandler(2000, call_display, 0);
+    }
+    else {
+	/* replay tcpdump file */
+	sockfd = open_dump(ttt_dumpfile, ttt_interface);
+
+	timer_token = Tk_CreateTimerHandler(2000, call_dumpread, 0);
+    }
 #endif /* !TTT_VIEW */
     /*
      * Specify a user-specific startup file to invoke if the application
@@ -154,6 +165,23 @@ void call_display(ClientData client_data)
     ttt_display(time_tick);
     timer_token = Tk_CreateTimerHandler(ttt_interval, call_display,
 				       (ClientData)(time_tick+1));
+}
+
+void call_dumpread(ClientData client_data)
+{
+    int time_tick = (int)client_data;
+    int interval, rval;
+
+    rval = dumpfile_read();
+    ttt_display(time_tick);
+    if (rval > 0) {
+	if (ttt_speed == 0)
+	    interval = 0;
+	else
+	    interval = ttt_interval / ttt_speed;
+	timer_token = Tk_CreateTimerHandler(interval, call_dumpread,
+					    (ClientData)(time_tick+1));
+    }
 }
 #endif /* !TTT_VIEW */
 
@@ -312,6 +340,8 @@ int *tclDummyMathPtr = (int *) matherr;
  *
  *----------------------------------------------------------------------
  */
+extern int Blt_Init _ANSI_ARGS_((Tcl_Interp *interp));
+extern int Blt_SafeInit _ANSI_ARGS_((Tcl_Interp *interp));
 extern int Tcl_AppInit _ANSI_ARGS_((Tcl_Interp *interp));
 
 int

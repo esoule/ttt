@@ -657,6 +657,7 @@ LDFLAGS=""
 case $target in
   *-solaris2*)
     LDFLAGS="-R ${tttRunPath}"
+    tttLibraries="${tttLibraries} -ldl"
     ;;
 
   *-bsdi*)

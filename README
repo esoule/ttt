@@ -1,7 +1,7 @@
 
-	TTT: Tele Traffic Tapper (version 1.2)
+	TTT: Tele Traffic Tapper (version 1.3)
 
-					98/07/15
+					98/09/22
 
 ttt is yet another descendant of tcpdump but it is capable of real-time,
 graphical, and remote traffic-monitoring.  ttt won't replace tcpdump,
@@ -80,7 +80,10 @@ Features:
 	afterwards from Tcl Shell. 
 
 	Currently, ttt understands ethernet frame, llc/snap frame of
-	802.3 and FDDI. 
+	802.3, FDDI, ppp and ATM.
+
+    - Can read tcpdump output:
+	ttt can replay traffic trace produced by "tcpdump -w".
 
 Installing TTT:
     Getting the source code:
@@ -174,6 +177,10 @@ Command Line Options:
 			if not specified, the default interface is chosen.
 			only useful when there are more than two interfaces.
     [-interval ms]	sets the interval in msec. the default is 1000 msec.
+    [-dumpfile file [-speed N]]
+			use a dumpfile (produced by "tcpdump -w") as input.
+			the speed option specifies the acceleration factor
+			of the replay speed.
 
   tttprobe [options] [dest]
     [dest]		specifies the remote host (viewer).
@@ -392,6 +399,12 @@ Send bug reports, suggestions, etc. to
 
 
 CHANGES:
+
+98/09/22	version-1.3
+
+98/09/21	add a function to read tcpdump output.
+		configure.in: add "-ldl" for solaris.
+		tk_ttt.c: support BLT2.4[ef] by providing missing prototypes.
 
 98/07/15	version-1.2
 		

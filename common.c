@@ -1,4 +1,4 @@
-/* $Id: common.c,v 0.3 1997/05/14 04:30:16 kjc Exp $ */
+/* $Id: common.c,v 0.4 1998/09/22 06:22:28 kjc Exp kjc $ */
 /*
  *  Copyright (c) 1996
  *	Sony Computer Science Laboratory Inc.  All rights reserved.
@@ -15,6 +15,7 @@
  */
 /* common.c -- globals and routines common to all ttt programs.  */
 #include <sys/types.h>
+#include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 
@@ -32,7 +33,10 @@ int ttt_nohostname = 0;		/* don't lookup host names */
 int ttt_filter = 0;		/* trace filter */
 
 /* only used at startup */
-char *ttt_interface;		/* interface name for packet capturing */
+char *ttt_interface = NULL;	/* interface name for packet capturing */
+char *ttt_dumpfile = NULL;	/* tcpdump file to replay */
+int ttt_speed = 1;		/* replay speed */
+struct timeval ttt_dumptime;
 char *ttt_viewname = NULL;
 char *ttt_mcastif = NULL;
 int ttt_portno = TTT_PORT;		/* receiver's port number */
