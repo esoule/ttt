@@ -1,7 +1,7 @@
 
-	TTT: Tele Traffic Tapper (version 1.8.1)
+	TTT: Tele Traffic Tapper (version 1.8.2)
 
-					2004/5/20
+					2004/8/14
 
 ttt is yet another descendant of tcpdump but it is capable of real-time,
 graphical, and remote traffic-monitoring.  ttt won't replace tcpdump,
@@ -381,6 +381,8 @@ Send bug reports, suggestions, etc. to
 
 
 CHANGES:
+2004/08/14	version 1.8.2
+		net_names.c: fix a type mismatch for gcc-3.4.2.
 2004/05/20	version 1.8.1
 2004/05/19	Makefile.in:
 		do not use pcap_inet.c to avoid prototype mismatches

@@ -1,4 +1,4 @@
-/* $Id: net_names.c,v 0.8 2003/10/16 11:55:00 kjc Exp $ */
+/* $Id: net_names.c,v 0.10 2004/08/14 12:32:13 kjc Exp kjc $ */
 /*
  *  Copyright (c) 1996-2000
  *	Sony Computer Science Laboratories, Inc.  All rights reserved.
@@ -16,6 +16,7 @@
 /* net_names.c -- a module to translate ids to name strings.  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/param.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -259,9 +260,9 @@ char *net_getname(long type, long *id)
 	break;
     case TTTTYPE_IPV6HOST:
     {
-	u_long tmp[4];
-	static char *inet6_ntoa(u_long *addr);  /* should be replaced
-						   by addr2ascii */
+	u_int32_t tmp[4];
+	static char *inet6_ntoa(u_int32_t *addr);  /* should be replaced
+						      by addr2ascii */
 	if ((buf = malloc(sizeof("xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx")))
 	    == NULL)
 	    fatal_error("get_protoname: no memory\n");

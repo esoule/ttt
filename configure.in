@@ -115,7 +115,7 @@ else
 fi
 
 if test "${tttHaveGcc}" = "yes" ; then
-  GCCFLAGS="-Wall -Wwrite-strings -fwritable-strings"
+  GCCFLAGS="-Wall"
 else 
   GCCFLAGS=""
 fi
