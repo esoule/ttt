@@ -145,11 +145,15 @@ static void ether_if_read(u_char *user, const struct pcap_pkthdr *h,
 static void fddi_if_read(u_char *user, const struct pcap_pkthdr *h,
 			 const u_char *p);
 static void atm_if_read(u_char *user, const struct pcap_pkthdr *h,
-			 const u_char *p);
+			const u_char *p);
 static void sl_if_read(u_char *user, const struct pcap_pkthdr *h,
-			 const u_char *p);
+		       const u_char *p);
 static void ppp_if_read(u_char *user, const struct pcap_pkthdr *h,
-			 const u_char *p);
+			const u_char *p);
+#ifdef DLT_RAW
+static void raw_if_read(u_char *pcap, const struct pcap_pkthdr *h,
+			const u_char *p);
+#endif
 #ifdef DLT_PPP_BSDOS
 static void ppp_bsdos_if_read(u_char *user, const struct pcap_pkthdr *h,
 			      const u_char *p);
@@ -627,6 +631,24 @@ static void null_if_read(u_char *user, const struct pcap_pkthdr *h, const u_char
 	}
 }
 
+#ifdef DLT_RAW
+static void raw_if_read(u_char *pcap, const struct pcap_pkthdr *h, const u_char *p)
+{
+	packet_length = h->len;  /* save data link level packet length */
+
+	switch (((struct ip *)p)->ip_v) {
+	case 4:
+	    ip_read(p, h->len, h->caplen);
+	    break;
+#ifdef IPV6
+	case 6:
+	    ipv6_read(p, h->len, h->caplen);
+	    break;
+#endif
+	}
+}
+#endif
+
 #ifndef PPPOE_HDRLEN
 #define PPPOE_HDRLEN	6
 #endif
@@ -685,7 +707,7 @@ static int ip_read(const u_char *bp, const int length, const int caplen)
     u_short srcport, dstport;
     struct tcphdr *tcp;
     struct udphdr *udp;
-    
+
     ip = (struct ip *)bp;
     if (length < sizeof (struct ip))
 	return 0;
@@ -706,7 +728,7 @@ static int ip_read(const u_char *bp, const int length, const int caplen)
 #endif /* ALIGN_WORD */
 
     hlen = ip->ip_hl * 4;
-    len = ntohs(ip->ip_len);
+    len = min(ntohs(ip->ip_len), length);
     len -= hlen;
     if (len < 0)
 	return 0;
@@ -887,7 +909,7 @@ static int ipv6_read(const u_char *bp, const int length, const int caplen)
     u_short srcport, dstport;
     struct tcphdr *tcp;
     struct udphdr *udp;
-    
+
     ipv6 = (struct ipv6 *)bp;
     if (length < sizeof (struct ipv6))
 	return 0;
@@ -908,7 +930,7 @@ static int ipv6_read(const u_char *bp, const int length, const int caplen)
 #endif /* ALIGN_WORD */
 
     hlen = read_ipv6hdr(ipv6, &proto, caplen);
-    len = ntohs(ipv6->ipv6_len) + sizeof(struct ipv6) - hlen;
+    len = min(ntohs(ipv6->ipv6_len) + sizeof(struct ipv6), length) - hlen;
     if (len < 0)
 	return 0;
     bp = (u_char *)ipv6 + hlen;
@@ -988,6 +1010,7 @@ static int read_ipv6hdr(struct ipv6 *ipv6, int *proto, int caplen)
 	hlen += opt_len;
 	if ((caplen -= opt_len) < 0)
 	    break;
+	nh = ipv6ext->i6ext_nh;
 	ipv6ext = (struct ipv6_ext *)((caddr_t)ipv6ext  + opt_len);
     }
     *proto = (int)nh;
@@ -1016,6 +1039,9 @@ static struct printer printers[] = {
 	{ ppp_netbsd_serial_if_read,  DLT_PPP_SERIAL },
 #endif
 	{ null_if_read,	DLT_NULL },
+#ifdef DLT_RAW
+	{ raw_if_read,  DLT_RAW },
+#endif
 	{ NULL,			0 },
 };
 

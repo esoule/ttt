@@ -9,7 +9,6 @@ AC_CONFIG_AUX_DIR(cf)
 #		--with-tk=DIR
 #		--with-blt=DIR
 #		--with-pcap=DIR
-#		--with-tcpdump=DIR (for linux-include)
 #		--with-cc=CC		
 #		--enable-ipv6, --disable-ipv6
 #
@@ -25,7 +24,6 @@ ttt_ckcmd_tcl_home=""
 ttt_ckcmd_tk_home=""
 ttt_ckcmd_blt_home="no"
 ttt_ckcmd_pcap_home="yes"
-ttt_ckcmd_tcpdump_home="yes"
 ttt_ckcmd_cc=""
 ttt_ckcmd_ipv6="auto"
 
@@ -37,8 +35,6 @@ AC_ARG_WITH(blt, [  --with-blt=DIR          find BLT headers and libraries in DI
   ttt_ckcmd_blt_home=$withval)
 AC_ARG_WITH(pcap, [  --with-pcap=DIR          find pcap headers and libraries in DIR],
   ttt_ckcmd_pcap_home=$withval)
-AC_ARG_WITH(tcpdump, [  --with-tcpdump=DIR          find linux headers in tcpdump source in DIR],
-  ttt_ckcmd_tcpdump_home=$withval)
 AC_ARG_WITH(cc, [  --with-cc=CC		  set C compiler to CC], [
   ttt_ckcmd_cc=$with_cc 
   unset ac_cv_prog_CC
@@ -181,22 +177,20 @@ guesses="\
  $ttt_ckcmd_tcl_home \
  $ttt_ckcmd_tcl_home/lib \
  $ttt_cv_tcl_lib \
+ /usr/local/lib/tcl8.4 \
  /usr/local/lib/tcl8.3 \
  /usr/local/lib/tcl8.2 \
- /usr/local/lib/tcl8.0 \
- /usr/local/lib/tcl7.6 \
- /usr/local/lib/tcl7.5 \
+ /usr/pkg/lib \
  /usr/local/tcl/lib \
+ /usr/local/tcl/tcl8.4/lib \
  /usr/local/tcl/tcl8.3/lib \
  /usr/local/tcl/tcl8.2/lib \
- /usr/local/tcl/tcl8.0/lib \
- /usr/local/tcl/tcl7.6/lib \
- /usr/local/tcl/tcl7.5/lib \
+ /usr/lib/tcl8.4 \
+ /usr/lib/tcl8.3 \
+ /usr/lib/tcl8.2 \
+ $PWD/../tcl8.4 \
  $PWD/../tcl8.3 \
  $PWD/../tcl8.2 \
- $PWD/../tcl8.0 \
- $PWD/../tcl7.6 \
- $PWD/../tcl7.5 \
  $prefix/lib \
  $exec_prefix/lib \
  /usr/local/lib /usr/lib"
@@ -236,22 +230,20 @@ guesses="\
  $ttt_ckcmd_tcl_home \
  $ttt_ckcmd_tcl_home/lib \
  $ttt_cv_tk_lib \
+ /usr/local/lib/tk8.4 \
  /usr/local/lib/tk8.3 \
  /usr/local/lib/tk8.2 \
- /usr/local/lib/tk8.0 \
- /usr/local/lib/tk4.2 \
- /usr/local/lib/tk4.1 \
+ /usr/pkg/lib \
  /usr/local/tcl/lib \
+ /usr/local/tcl/tk8.4/lib \
  /usr/local/tcl/tk8.3/lib \
  /usr/local/tcl/tk8.2/lib \
- /usr/local/tcl/tk8.0/lib \
- /usr/local/tcl/tk4.2/lib \
- /usr/local/tcl/tk4.1/lib \
+ /usr/lib/tk8.4 \
+ /usr/lib/tk8.3 \
+ /usr/lib/tk8.2 \
+ $PWD/../tk8.4 \
  $PWD/../tk8.3 \
  $PWD/../tk8.2 \
- $PWD/../tk8.0 \
- $PWD/../tk4.2 \
- $PWD/../tk4.1 \
  $prefix/lib \
  $exec_prefix/lib \
  /usr/local/lib /usr/lib"
@@ -282,27 +274,23 @@ guesses="\
  $ttt_ckcmd_tcl_home \
  $ttt_ckcmd_tcl_home/lib \
  $ttt_cv_tk_lib \
+ /usr/local/lib/tk8.4 \
  /usr/local/lib/tk8.3 \
  /usr/local/lib/tk8.2 \
- /usr/local/lib/tk8.0 \
- /usr/local/lib/tk4.2 \
- /usr/local/lib/tk4.1 \
+ /usr/local/lib/tcl8.4 \
  /usr/local/lib/tcl8.3 \
  /usr/local/lib/tcl8.2 \
- /usr/local/lib/tcl8.0 \
- /usr/local/lib/tcl7.6 \
- /usr/local/lib/tcl7.5 \
  /usr/local/tcl/lib \
+ /usr/pkg/lib \
+ /usr/local/tcl/tk8.4/lib \
  /usr/local/tcl/tk8.3/lib \
  /usr/local/tcl/tk8.2/lib \
- /usr/local/tcl/tk8.0/lib \
- /usr/local/tcl/tk4.2/lib \
- /usr/local/tcl/tk4.1/lib \
+ /usr/local/tcl/tcl8.4/lib \
  /usr/local/tcl/tcl8.3/lib \
  /usr/local/tcl/tcl8.2/lib \
- /usr/local/tcl/tcl8.0/lib \
- /usr/local/tcl/tcl7.6/lib \
- /usr/local/tcl/tcl7.5/lib \
+ /usr/lib/tk8.4 \
+ /usr/lib/tk8.3 \
+ /usr/lib/tk8.2 \
  $prefix/lib \
  $exec_prefix/lib \
  $XLIBDIR \
@@ -321,83 +309,6 @@ for dir in $guesses; do
   fi
 done
 AC_MSG_RESULT([${itclConfigFile}])
-
-# -----------------------------------------------------------------------
-#
-#	Find the BLT header "blt.h" and library "libBLT.a"
-#
-# -----------------------------------------------------------------------
-
-bltIncDir=""
-bltLibDir=""
-bltIncSpec=""
-bltLibSpec=""
-
-AC_MSG_CHECKING([for blt.h])
-bltHdrFile=""
-guesses="\
- $ttt_ckcmd_blt_home \
- $ttt_ckcmd_blt_home/include \
- $prefix/include \
- $exec_prefix/include \
- /usr/local/include \
- /usr/local/blt/include \
- /usr/include"
-
-for dir in $guesses; do
-  if test -r "$dir/blt.h" ; then
-    bltHdrFile="$dir/blt.h"
-    bltIncDir="$dir"
-    bltIncSpec="-I$dir"
-    break
-  fi
-done
-AC_MSG_RESULT([${bltHdrFile}])
-
-if test "x$bltHdrFile" = "x" ; then
-  echo "can't find BLT header file \"blt.h\""
-  exit 1
-fi
-
-AC_MSG_CHECKING([for libBLT.a])
-bltLibFile=""
-guesses="\
- $ttt_ckcmd_blt_home \
- $ttt_ckcmd_blt_home/lib \
- $prefix/lib \
- $exec_prefix/lib \
- /usr/local/lib \
- /usr/local/blt/lib \
- /usr/lib"
-
-for dir in $guesses; do
-  if test -r "$dir/libBLT24.a" ; then
-    bltLibFile="$dir/libBLT24.a"
-    bltLibDir="$dir"
-    bltLibSpec="-L$dir -lBLT24"
-    break
-  elif test -r "$dir/libBLT.a" ; then
-    bltLibFile="$dir/libBLT.a"
-    bltLibDir="$dir"
-    bltLibSpec="-L$dir -lBLT"
-    break
-  fi
-done
-AC_MSG_RESULT([${bltLibFile}])
-
-if test "x$bltLibFile" = "x" ; then
-  echo "can't find BLT library file \"libBLT.a\""
-  exit 1
-fi
-
-# -----------------------------------------------------------------------
-# 
-# BLT include files and libraries
-#
-# -----------------------------------------------------------------------
-tttIncludes="${tttIncludes} ${bltIncSpec}"
-tttLibraries="${tttLibraries} ${bltLibSpec}"
-tttRunPath="${tttRunPath}:${bltLibDir}"
 
 # -----------------------------------------------------------------------
 #
@@ -431,7 +342,7 @@ tclLibDir=${TCL_PREFIX}/lib
 tkLibDir=${TK_PREFIX}/lib
 
 case $target in
-  *-freebsd*)
+  *-freebsd*|*-netbsd*|*-openbsd*|*-sunos4*|*-linux-*)
     tclIncSpec="-I${TCL_PREFIX}/include/tcl${TCL_MAJOR_VERSION}.${TCL_MINOR_VERSION}"
     tkIncSpec="-I${TK_PREFIX}/include/tk${TK_MAJOR_VERSION}.${TK_MINOR_VERSION}"
     ;;
@@ -523,6 +434,95 @@ fi
 
 
 # -----------------------------------------------------------------------
+#
+#	Find the BLT header "blt.h" and library "libBLT.a"
+#
+# -----------------------------------------------------------------------
+
+bltIncDir=""
+bltLibDir=""
+bltIncSpec=""
+bltLibSpec=""
+
+AC_MSG_CHECKING([for blt.h])
+bltHdrFile=""
+guesses="\
+ $ttt_ckcmd_blt_home \
+ $ttt_ckcmd_blt_home/include \
+ $prefix/include \
+ $exec_prefix/include \
+ /usr/local/include \
+ /usr/local/blt/include \
+ /usr/pkg/include \
+ /usr/include"
+
+for dir in $guesses; do
+  if test -r "$dir/blt.h" ; then
+    bltHdrFile="$dir/blt.h"
+    bltIncDir="$dir"
+    bltIncSpec="-I$dir"
+    break
+  fi
+done
+AC_MSG_RESULT([${bltHdrFile}])
+
+if test "x$bltHdrFile" = "x" ; then
+  echo "can't find BLT header file \"blt.h\""
+  exit 1
+fi
+
+AC_MSG_CHECKING([for libBLT.a])
+bltLibFile=""
+guesses="\
+ $ttt_ckcmd_blt_home \
+ $ttt_ckcmd_blt_home/lib \
+ $prefix/lib \
+ $exec_prefix/lib \
+ /usr/local/lib \
+ /usr/local/blt/lib \
+ /usr/pkg/lib \
+ /usr/lib"
+
+for dir in $guesses; do
+  if test -r "$dir/libBLT24.a" ; then
+    bltLibFile="$dir/libBLT24.a"
+    bltLibDir="$dir"
+    bltLibSpec="-L$dir -lBLT24"
+    break
+  elif test -r "$dir/libBLT.2.4.a" ; then
+    bltLibFile="$dir/libBLT.2.4.a"
+    bltLibDir="$dir"
+    bltLibSpec="-L$dir -lBLT.2.4"
+    break
+  elif test -r "$dir/libBLT.2.4.${TCL_MAJOR_VERSION}.${TCL_MINOR_VERSION}.a" ; then
+    bltLibFile="$dir/libBLT.2.4.${TCL_MAJOR_VERSION}.${TCL_MINOR_VERSION}.a"
+    bltLibDir="$dir"
+    bltLibSpec="-L$dir -lBLT.2.4.${TCL_MAJOR_VERSION}.${TCL_MINOR_VERSION}"
+    break
+  elif test -r "$dir/libBLT.a" ; then
+    bltLibFile="$dir/libBLT.a"
+    bltLibDir="$dir"
+    bltLibSpec="-L$dir -lBLT"
+    break
+  fi
+done
+AC_MSG_RESULT([${bltLibFile}])
+
+if test "x$bltLibFile" = "x" ; then
+  echo "can't find BLT library file \"libBLT.a\""
+  exit 1
+fi
+
+# -----------------------------------------------------------------------
+# 
+# BLT include files and libraries
+#
+# -----------------------------------------------------------------------
+tttIncludes="${tttIncludes} ${bltIncSpec}"
+tttLibraries="${tttLibraries} ${bltLibSpec}"
+tttRunPath="${tttRunPath}:${bltLibDir}"
+
+# -----------------------------------------------------------------------
 # 
 # -lX11
 #
@@ -591,39 +591,6 @@ if test "${ttt_ckcmd_pcap_home}" != "no" ; then
     exit 1
   fi
 fi
-
-# -----------------------------------------------------------------------
-# 
-# tcpdump linux headers for linux
-#
-# -----------------------------------------------------------------------
-linuxInc=""
-guesses="$ttt_ckcmd_tcpdump_home"
-
-case $target in
-
-  *-linux*)
-	AC_MSG_CHECKING([for tcpdump/linux-include])
-
-	for dir in $guesses; do
-	  if test -r "$dir/linux-include" ; then
-	    linuxInc="$dir/linux-include"
-	    break
-	  fi
-	done
-
-	AC_MSG_RESULT([${linuxInc}])
-
-	if test "x$linuxInc" = "x" ; then
-	  echo "linux requires tcpdump source"
-	  echo "use \"--with-tcpdump=DIR\" to specify tcpdump source directory"
-	  exit 1
-	fi
-
-	tttIncludes="-I${linuxInc} ${tttIncludes}"
-    ;;
-
-esac
 
 # -----------------------------------------------------------------------
 # 
@@ -724,12 +691,17 @@ esac
 
 tttLibraries="${tttLibraries} ${LIBS}"
 
-LDFLAGS=""
-
 case $target in
   *-solaris2*)
     LDFLAGS="-R ${tttRunPath}"
     tttLibraries="${tttLibraries} -ldl"
+    ;;
+
+  *-freebsd*)
+    ;;
+
+  *-netbsd*|*-openbsd*)
+    LDFLAGS="-R ${tttRunPath}"
     ;;
 
   *-bsdi*)
@@ -737,9 +709,12 @@ case $target in
     ;;
 
   *-linux*)
+    tttFlags="-D_BSD_SOURCE ${tttFlags}"
     tttLibraries="${tttLibraries} -ldl"
     ;;
 
+  *)
+    ;;
 esac
 
 AC_SUBST(LDFLAGS)

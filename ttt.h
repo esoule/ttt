@@ -20,8 +20,8 @@
 #include <sys/types.h>
 
 #define TTT_MAJOR	1
-#define TTT_MINOR	6
-#define TTT_VERSION	"1.6"
+#define TTT_MINOR	7
+#define TTT_VERSION	"1.7"
 
 /* default path for ttt.tcl */
 #ifndef TTT_LIBRARY
