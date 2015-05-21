@@ -21,6 +21,7 @@ srcdir	     = @srcdir@
 bindir       = @bindir@
 libdir	     = @TTT_LIBDIR@
 mandir	     = @mandir@
+datarootdir	= @datarootdir@
 
 # ------------------------------------------------------------------------
 #       Include directives for Tcl, Tk, and X include files 
