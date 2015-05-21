@@ -197,6 +197,7 @@ guesses="\
  $PWD/../tcl8.4 \
  $PWD/../tcl8.3 \
  $PWD/../tcl8.2 \
+ $libdir \
  $prefix/lib \
  $exec_prefix/lib \
  /usr/local/lib /usr/lib"
@@ -250,6 +251,7 @@ guesses="\
  $PWD/../tk8.4 \
  $PWD/../tk8.3 \
  $PWD/../tk8.2 \
+ $libdir \
  $prefix/lib \
  $exec_prefix/lib \
  /usr/local/lib /usr/lib"
@@ -297,6 +299,7 @@ guesses="\
  /usr/lib/tk8.4 \
  /usr/lib/tk8.3 \
  /usr/lib/tk8.2 \
+ $libdir \
  $prefix/lib \
  $exec_prefix/lib \
  $XLIBDIR \
@@ -357,14 +360,14 @@ esac
 itclLibSpec=""
 itclIncSpec=""
 itclSuffix=""
-if test "x$itclConfigFile" != "x" ; then
-  . $itclConfigFile
-  tclIncSpec="-I${TCL_PREFIX}/include/itcl"
-  tkIncSpec="-I${TK_PREFIX}/include/itcl"
-  tclLibDir=${TCL_PREFIX}/lib/itcl
-  tkLibDir=${TK_PREFIX}/lib/itcl
-  itclSuffix="i"
-fi
+# if test "x$itclConfigFile" != "x" ; then
+#   . $itclConfigFile
+#   tclIncSpec="-I${TCL_PREFIX}/include/itcl"
+#   tkIncSpec="-I${TK_PREFIX}/include/itcl"
+#   tclLibDir=${TCL_PREFIX}/lib/itcl
+#   tkLibDir=${TK_PREFIX}/lib/itcl
+#   itclSuffix="i"
+# fi
 
 tclLibSpec=${TCL_LIB_SPEC}
 tkLibSpec=${TK_LIB_SPEC}
@@ -455,11 +458,14 @@ bltHdrFile=""
 guesses="\
  $ttt_ckcmd_blt_home \
  $ttt_ckcmd_blt_home/include \
+ $prefix/include/blt \
  $prefix/include \
+ $exec_prefix/include/blt \
  $exec_prefix/include \
  /usr/local/include \
  /usr/local/blt/include \
  /usr/pkg/include \
+ /usr/include/blt \
  /usr/include"
 
 for dir in $guesses; do
@@ -482,6 +488,7 @@ bltLibFile=""
 guesses="\
  $ttt_ckcmd_blt_home \
  $ttt_ckcmd_blt_home/lib \
+ $libdir \
  $prefix/lib \
  $exec_prefix/lib \
  /usr/local/lib \
@@ -490,7 +497,12 @@ guesses="\
  /usr/lib"
 
 for dir in $guesses; do
-  if test -r "$dir/libBLT24.a" ; then
+  if test -r "$dir/libBLT24.so" ; then
+    bltLibFile="$dir/libBLT24.so"
+    bltLibDir="$dir"
+    bltLibSpec="-L$dir -lBLT24"
+    break
+  elif test -r "$dir/libBLT24.a" ; then
     bltLibFile="$dir/libBLT24.a"
     bltLibDir="$dir"
     bltLibSpec="-L$dir -lBLT24"
