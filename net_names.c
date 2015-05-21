@@ -161,6 +161,11 @@ static char *pname_lookup(struct pname_tab *tab, long id)
     return NULL;
 }
 
+#ifdef IPV6
+static char *inet6_ntoa(u_int32_t *addr);  /* should be replaced
+					      by addr2ascii */
+#endif /* IPV6 */
+
 char *net_getname(long type, long *id)
 {
     char *buf, *name;
@@ -261,8 +266,6 @@ char *net_getname(long type, long *id)
     case TTTTYPE_IPV6HOST:
     {
 	u_int32_t tmp[4];
-	static char *inet6_ntoa(u_int32_t *addr);  /* should be replaced
-						      by addr2ascii */
 	if ((buf = malloc(sizeof("xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx")))
 	    == NULL)
 	    fatal_error("get_protoname: no memory\n");
