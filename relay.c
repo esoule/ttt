@@ -83,7 +83,9 @@ int name2sockaddr(char *name, int port, union sockunion *addrp, int family)
     }
 #else /* INET6 */    
     addrp->su_sin.sin_family = AF_INET;
+#if (!defined(__linux__))
     addrp->su_sin.sin_len = sizeof(struct sockaddr_in);
+#endif /* (!defined(__linux__)) */
     if (name != NULL) {
 	if ((inaddr = inet_addr(name)) != -1)
 	    memcpy(&addrp->su_sin.sin_addr, &inaddr, sizeof(inaddr));
