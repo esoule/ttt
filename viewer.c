@@ -289,8 +289,9 @@ static int check_seqno(int seq_no)
 
 void view_sockread(ClientData clientdata, int mask)
 {
-    int sockfd, nbytes, fromlen, rsize, seq_no, nrecords, i;
+    int sockfd, nbytes, rsize, seq_no, nrecords, i;
     struct sockaddr_in from_addr;
+    socklen_t fromlen;
     struct ttt_hdr *hdr;
     char *cp;
 
