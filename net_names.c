@@ -231,8 +231,9 @@ char *net_getname(long type, long *id)
 #endif /* !DONT_LOOKUP_HOSTNAME */
 	    strcpy(buf, name);
 	}
-	else
+	else {
 	    sprintf(buf, "%s", intoa(addr));
+	}
     }
 	break;
 #ifdef IPV6
