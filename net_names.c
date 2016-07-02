@@ -170,11 +170,21 @@ char *net_getname(long type, long *id)
 {
     char *buf, *name;
     u_short portno;
+    size_t buf_len = sizeof("ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255");
+
+#ifndef DONT_LOOKUP_HOSTNAME
+    if (type == TTTTYPE_IPHOST) {
+        buf_len = 256;
+    }
+#endif /* !DONT_LOOKUP_HOSTNAME */
+
+    if ((buf = malloc(buf_len)) == NULL)
+        fatal_error("get_protoname: no memory\n");
+
+    buf[0] = '\0';
 
     switch(type) {
     case TTTTYPE_ETHER:
-	if ((buf = malloc(sizeof("revarp/ether  "))) == NULL)
-	    fatal_error("get_protoname: no memory\n");
 	name = pname_lookup(eth_tab, id[0]);
 	if (name != NULL)
 	    sprintf(buf, "%s/ether", name);
@@ -182,8 +192,6 @@ char *net_getname(long type, long *id)
 	    sprintf(buf, "0x%lx/ether", id[0]);
 	break;
     case TTTTYPE_IP:
-	if ((buf = malloc(sizeof("encap/ip  "))) == NULL)
-	    fatal_error("get_protoname: no memory\n");
 	name = pname_lookup(ip_tab, id[0]);
 	if (name != NULL)
 	    sprintf(buf, "%s/ip", name);
@@ -191,8 +199,6 @@ char *net_getname(long type, long *id)
 	    sprintf(buf, "%lu/ip", id[0]);
 	break;
     case TTTTYPE_UDP:
-	if ((buf = malloc(sizeof("some-long-service-name/udp"))) == NULL)
-	    fatal_error("get_protoname: no memory\n");
 	portno = id[0];
 	if ((name = udpport_string(portno)) != NULL)
 	    sprintf(buf, "%s/udp", name);
@@ -200,8 +206,6 @@ char *net_getname(long type, long *id)
 	    sprintf(buf, "%lu/udp", id[0]);
 	break;
     case TTTTYPE_TCP:
-	if ((buf = malloc(sizeof("some-long-service-name/tcp"))) == NULL)
-	    fatal_error("get_protoname: no memory\n");
 	portno = id[0];
 	if ((name = tcpport_string(portno)) != NULL)
 	    sprintf(buf, "%s/tcp", name);
@@ -212,8 +216,6 @@ char *net_getname(long type, long *id)
     {
 	u_long addr;
 
-	if ((buf = malloc(sizeof("xxx.xxx.xxx.xxx"))) == NULL)
-	    fatal_error("get_protoname: no memory\n");
 	addr = htonl(id[0]);
 #ifdef DONT_LOOKUP_HOSTNAME
 	if (!ttt_nohostname && (name = getname(addr)) != NULL) {
@@ -243,8 +245,6 @@ char *net_getname(long type, long *id)
 	break;
 #ifdef IPV6
     case TTTTYPE_IPV6:
-	if ((buf = malloc(sizeof("icmp6/ip6  "))) == NULL)
-	    fatal_error("get_protoname: no memory\n");
 	name = pname_lookup(ip_tab, id[0]);
 	if (name != NULL)
 	    sprintf(buf, "%s/ip6", name);
@@ -252,8 +252,6 @@ char *net_getname(long type, long *id)
 	    sprintf(buf, "%lu/ip6", id[0]);
 	break;
     case TTTTYPE_UDPV6:
-	if ((buf = malloc(sizeof("some-long-service-name/udp6"))) == NULL)
-	    fatal_error("get_protoname: no memory\n");
 	portno = id[0];
 	if ((name = udpport_string(portno)) != NULL)
 	    sprintf(buf, "%s/udp6", name);
@@ -261,8 +259,6 @@ char *net_getname(long type, long *id)
 	    sprintf(buf, "%lu/udp6", id[0]);
 	break;
     case TTTTYPE_TCPV6:
-	if ((buf = malloc(sizeof("some-long-service-name/tcp6"))) == NULL)
-	    fatal_error("get_protoname: no memory\n");
 	portno = id[0];
 	if ((name = tcpport_string(portno)) != NULL)
 	    sprintf(buf, "%s/tcp6", name);
@@ -272,9 +268,6 @@ char *net_getname(long type, long *id)
     case TTTTYPE_IPV6HOST:
     {
 	u_int32_t tmp[4];
-	if ((buf = malloc(sizeof("xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx")))
-	    == NULL)
-	    fatal_error("get_protoname: no memory\n");
 	tmp[0] = htonl(id[0]);
 	tmp[1] = htonl(id[1]);
 	tmp[2] = htonl(id[2]);
@@ -284,7 +277,6 @@ char *net_getname(long type, long *id)
 	break;
 #endif /* IPV6 */
     default:
-	if ((buf = malloc(sizeof("unknown"))) == NULL)
 	sprintf(buf, "unknown");
 	break;
     }
