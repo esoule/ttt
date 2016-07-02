@@ -187,30 +187,30 @@ char *net_getname(long type, long *id)
     case TTTTYPE_ETHER:
 	name = pname_lookup(eth_tab, id[0]);
 	if (name != NULL)
-	    sprintf(buf, "%s/ether", name);
+	    snprintf(buf, buf_len, "%s/ether", name);
 	else
-	    sprintf(buf, "0x%lx/ether", id[0]);
+	    snprintf(buf, buf_len, "0x%lx/ether", id[0]);
 	break;
     case TTTTYPE_IP:
 	name = pname_lookup(ip_tab, id[0]);
 	if (name != NULL)
-	    sprintf(buf, "%s/ip", name);
+	    snprintf(buf, buf_len, "%s/ip", name);
 	else
-	    sprintf(buf, "%lu/ip", id[0]);
+	    snprintf(buf, buf_len, "%lu/ip", id[0]);
 	break;
     case TTTTYPE_UDP:
 	portno = id[0];
 	if ((name = udpport_string(portno)) != NULL)
-	    sprintf(buf, "%s/udp", name);
+	    snprintf(buf, buf_len, "%s/udp", name);
 	else
-	    sprintf(buf, "%lu/udp", id[0]);
+	    snprintf(buf, buf_len, "%lu/udp", id[0]);
 	break;
     case TTTTYPE_TCP:
 	portno = id[0];
 	if ((name = tcpport_string(portno)) != NULL)
-	    sprintf(buf, "%s/tcp", name);
+	    snprintf(buf, buf_len, "%s/tcp", name);
 	else
-	    sprintf(buf, "%lu/tcp", id[0]);
+	    snprintf(buf, buf_len, "%lu/tcp", id[0]);
 	break;
     case TTTTYPE_IPHOST:
     {
@@ -219,10 +219,10 @@ char *net_getname(long type, long *id)
 	addr = htonl(id[0]);
 #ifdef DONT_LOOKUP_HOSTNAME
 	if (!ttt_nohostname && (name = getname(addr)) != NULL) {
-	    strcpy(buf, name);
+	    strncpy(buf, name, buf_len);
 	}
 	else {
-	    sprintf(buf, "%s", intoa(addr));
+	    snprintf(buf, buf_len, "%s", intoa(addr));
 	}
 #else
 	/* lookup the hostname only when
@@ -235,10 +235,10 @@ char *net_getname(long type, long *id)
 	    && (addr &~ f_localnet) != 0
 	    && (addr | f_netmask) != 0xffffffff
 	    && ((name = getname(addr)) != NULL)) {
-	    strcpy(buf, name);
+	    strncpy(buf, name, buf_len);
 	}
 	else {
-	    sprintf(buf, "%s", intoa(addr));
+	    snprintf(buf, buf_len, "%s", intoa(addr));
 	}
 #endif /* !DONT_LOOKUP_HOSTNAME */
     }
@@ -247,23 +247,23 @@ char *net_getname(long type, long *id)
     case TTTTYPE_IPV6:
 	name = pname_lookup(ip_tab, id[0]);
 	if (name != NULL)
-	    sprintf(buf, "%s/ip6", name);
+	    snprintf(buf, buf_len, "%s/ip6", name);
 	else
-	    sprintf(buf, "%lu/ip6", id[0]);
+	    snprintf(buf, buf_len, "%lu/ip6", id[0]);
 	break;
     case TTTTYPE_UDPV6:
 	portno = id[0];
 	if ((name = udpport_string(portno)) != NULL)
-	    sprintf(buf, "%s/udp6", name);
+	    snprintf(buf, buf_len, "%s/udp6", name);
 	else
-	    sprintf(buf, "%lu/udp6", id[0]);
+	    snprintf(buf, buf_len, "%lu/udp6", id[0]);
 	break;
     case TTTTYPE_TCPV6:
 	portno = id[0];
 	if ((name = tcpport_string(portno)) != NULL)
-	    sprintf(buf, "%s/tcp6", name);
+	    snprintf(buf, buf_len, "%s/tcp6", name);
 	else
-	    sprintf(buf, "%lu/tcp6", id[0]);
+	    snprintf(buf, buf_len, "%lu/tcp6", id[0]);
 	break;
     case TTTTYPE_IPV6HOST:
     {
@@ -272,14 +272,16 @@ char *net_getname(long type, long *id)
 	tmp[1] = htonl(id[1]);
 	tmp[2] = htonl(id[2]);
 	tmp[3] = htonl(id[3]);
-	sprintf(buf, "%s", inet6_ntoa(tmp));
+	snprintf(buf, buf_len, "%s", inet6_ntoa(tmp));
     }
 	break;
 #endif /* IPV6 */
     default:
-	sprintf(buf, "unknown");
+	snprintf(buf, buf_len, "unknown");
 	break;
     }
+
+    buf[buf_len - 1] = '\0';
     return buf;
 }
 
