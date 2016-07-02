@@ -217,6 +217,11 @@ char *net_getname(long type, long *id)
 	addr = htonl(id[0]);
 #ifdef DONT_LOOKUP_HOSTNAME
 	if (!ttt_nohostname && (name = getname(addr)) != NULL) {
+	    strcpy(buf, name);
+	}
+	else {
+	    sprintf(buf, "%s", intoa(addr));
+	}
 #else
 	/* lookup the hostname only when
 	   (1) the address is local. (otherwise, it might take a long time
@@ -228,12 +233,12 @@ char *net_getname(long type, long *id)
 	    && (addr &~ f_localnet) != 0
 	    && (addr | f_netmask) != 0xffffffff
 	    && ((name = getname(addr)) != NULL)) {
-#endif /* !DONT_LOOKUP_HOSTNAME */
 	    strcpy(buf, name);
 	}
 	else {
 	    sprintf(buf, "%s", intoa(addr));
 	}
+#endif /* !DONT_LOOKUP_HOSTNAME */
     }
 	break;
 #ifdef IPV6
