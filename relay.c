@@ -297,8 +297,9 @@ int main(argc, argv)
 	memset(&probe_addr, 0, sizeof(probe_addr));
 	
     while (1) {
-	int nbytes, fromlen;
+	int nbytes;
 	union sockunion from_addr;
+	socklen_t fromlen;
 
 	fromlen = sizeof(from_addr);
 	if ((nbytes = recvfrom(in_fd, buffer, BUFFER_SIZE, 0,
